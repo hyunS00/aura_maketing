@@ -1,0 +1,35 @@
+{
+  "name": "aura",
+  "version": "0.0.1",
+  "main": "electron/main.js",
+  "scripts": {
+    "dev": "concurrently \"npm run frontend\" \"NODE_ENV=development npm run electron\"",
+    "frontend": "cd front && npm run dev",
+    "electron": "wait-on http://localhost:5173 && electron .",
+    "build": "cd front && npm run build",
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
+  },
+  "dependencies": {
+    "date-fns": "^4.1.0",
+    "date-fns-tz": "^3.2.0",
+    "electron-squirrel-startup": "^1.0.1",
+    "lodash": "^4.17.21",
+    "xlsx-populate": "^1.21.0"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.6.0",
+    "@electron-forge/maker-deb": "^7.6.0",
+    "@electron-forge/maker-dmg": "^7.6.0",
+    "@electron-forge/maker-rpm": "^7.6.0",
+    "@electron-forge/maker-squirrel": "^7.6.0",
+    "@electron-forge/maker-zip": "^7.6.0",
+    "@electron-forge/plugin-auto-unpack-natives": "^7.6.0",
+    "@electron-forge/plugin-fuses": "^7.6.0",
+    "@electron/fuses": "^1.8.0",
+    "concurrently": "^7.0.0",
+    "electron": "^25.0.0",
+    "wait-on": "^7.0.0"
+  }
+}
