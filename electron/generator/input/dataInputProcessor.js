@@ -21,10 +21,10 @@ const formatHandlers = {
  * @param {string} platform - 플랫폼 이름 (예: 'coupang', 'naver')
  * @param {string} reportType - 보고서 유형 (예: 'weekly', 'monthly')
  * @param {string} format - 입력 데이터 포맷 (예: 'excel', 'json', 'csv')
- * @param {string} filePath - 입력 파일 경로
+ * @param {Object<string>} filePaths - 입력 파일 경로
  * @returns {Promise<Array>} - 파싱된 데이터 배열
  */
-const processInput = async (platform, reportType, format, filePath) => {
+const processInput = async (platform, reportType, format, filePaths) => {
   const lowerPlatform = platform.toLowerCase();
   const lowerReportType = reportType.toLowerCase();
   const handler = formatHandlers[platform.toLowerCase()];
@@ -43,9 +43,13 @@ const processInput = async (platform, reportType, format, filePath) => {
 
   try {
     // 핸들러 호출하여 데이터 파싱
-    const { worksheet, attributeMap } = await handler(filePath);
-    const data = readWorksheetData(worksheet, attributeMap, lowerPlatform);
-    console.log(`파일 ${path.basename(filePath)}의 데이터 처리 성공.`);
+    const { worksheets, attributeMaps } = await handler(filePaths);
+
+    const data = readWorksheetData(worksheets, attributeMaps, lowerPlatform);
+    console.log(data);
+
+    console.log(`파일 ${filePaths?.prev}의 데이터 처리 성공.`);
+    console.log(`파일 ${filePaths?.current}의 데이터 처리 성공.`);
     return data;
   } catch (error) {
     throw error;
@@ -54,56 +58,67 @@ const processInput = async (platform, reportType, format, filePath) => {
 
 /**
  * 워크시트 데이터를 읽어오는 함수
- * @param {object} worksheet - XlsxPopulate 워크시트 객체
- * @param {Map} attributeMap - 표준 속성과 실제 속성의 매핑 Map 객체
+ * @param {object} worksheets - XlsxPopulate 워크시트 객체
+ * @param {Map} attributeMaps - 표준 속성과 실제 속성의 매핑 Map 객체
  * @param {string} platform - 플랫폼 이름 (예: 'coupang', 'naver')
+ * @param {string} reportType - 플랫폼 이름 (예: 'coupang', 'naver')
  * @returns {Array} - 읽어온 데이터 배열
  */
-const readWorksheetData = (worksheet, attributeMap, platform) => {
+const readWorksheetData = (worksheets, attributeMaps, platform, reportType) => {
   const data = [];
-  const usedRange = worksheet.usedRange();
-  const lastRow = usedRange ? usedRange.endCell().rowNumber() : 0;
+  for (const key of Object.keys(worksheets)) {
+    const worksheet = worksheets[key];
+    console.log("key", key);
 
-  for (let rowIndex = 2; rowIndex <= lastRow; rowIndex++) {
-    const row = worksheet.row(rowIndex);
-    const campaign = row.cell(attributeMap.get("campaign")).value();
-    const day = row.cell(attributeMap.get("day")).value();
-    const impressions = row.cell(attributeMap.get("impressions")).value() || 0;
-    const clicks = row.cell(attributeMap.get("clicks")).value() || 0;
-    const adCost = row.cell(attributeMap.get("cost")).value() || 0;
-    const conversion = row.cell(attributeMap.get("conversions")).value() || 0;
-    const conversionRevenue =
-      row.cell(attributeMap.get("revenue")).value() || 0;
+    if (worksheet) {
+      const attributeMap = attributeMaps[key];
+      const usedRange = worksheet.usedRange();
+      const lastRow = usedRange ? usedRange.endCell().rowNumber() : 0;
 
-    // 추가적인 속성 처리
-    const additionalAttributes = {};
-    platformConfigAdditionalAttributes(
-      platform,
-      attributeMap,
-      row,
-      additionalAttributes
-    );
+      for (let rowIndex = 2; rowIndex <= lastRow; rowIndex++) {
+        const row = worksheet.row(rowIndex);
+        const campaign = row.cell(attributeMap.get("campaign")).value();
+        const day = row.cell(attributeMap.get("day")).value();
+        const impressions =
+          row.cell(attributeMap.get("impressions")).value() || 0;
+        const clicks = row.cell(attributeMap.get("clicks")).value() || 0;
+        const adCost = row.cell(attributeMap.get("cost")).value() || 0;
+        const conversion =
+          row.cell(attributeMap.get("conversions")).value() || 0;
+        const conversionRevenue =
+          row.cell(attributeMap.get("revenue")).value() || 0;
 
-    if (!campaign) continue;
+        // 추가적인 속성 처리
+        const additionalAttributes = {};
+        platformConfigAdditionalAttributes(
+          platform,
+          attributeMap,
+          row,
+          additionalAttributes
+        );
 
-    let type = "기타";
-    if (campaign.includes("자동")) {
-      type = "자동";
-    } else if (campaign.includes("수동")) {
-      type = "수동";
+        if (!campaign) continue;
+
+        let type = "기타";
+        if (campaign.includes("자동")) {
+          type = "자동";
+        } else if (campaign.includes("수동")) {
+          type = "수동";
+        }
+
+        data.push({
+          campaign,
+          type,
+          day: convertYYYYMMDDtoYYMMDD(String(day)),
+          impressions: Number(impressions),
+          clicks: Number(clicks),
+          adCost: Number(adCost),
+          conversion: Number(conversion),
+          conversionRevenue: Number(conversionRevenue),
+          ...additionalAttributes, // 추가 속성 병합
+        });
+      }
     }
-
-    data.push({
-      campaign,
-      type,
-      day: convertYYYYMMDDtoYYMMDD(String(day)),
-      impressions: Number(impressions),
-      clicks: Number(clicks),
-      adCost: Number(adCost),
-      conversion: Number(conversion),
-      conversionRevenue: Number(conversionRevenue),
-      ...additionalAttributes, // 추가 속성 병합
-    });
   }
 
   console.log(`워크시트 데이터 읽기 완료. 총 레코드 수: ${data.length}`);

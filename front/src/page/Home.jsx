@@ -58,7 +58,7 @@ const Home = () => {
     console.log(code, name, platform, type, filePaths.current);
     setIsProcessing(true);
     const reportBuffer = await window.electronAPI.generateReport({
-      filePaths: filePaths.current,
+      filePaths,
       code,
       name,
       platform,

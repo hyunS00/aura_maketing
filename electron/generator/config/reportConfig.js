@@ -1,6 +1,9 @@
 const reportConfig = {
   coupang: {
     weekly: {
+      file: {
+        length: 1,
+      },
       sheet: ["요약", "요일", "캠페인", "비검색영역"],
       templatePath: "./templates/coupangWeeklyTemplate.xlsx",
       mappings: {
