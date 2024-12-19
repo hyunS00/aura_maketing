@@ -380,9 +380,250 @@ const aggregateDataByNoSearch = (data) => {
   return aggregatedArray;
 };
 
+/**
+ * 타입과 월을 기준으로 데이터를 집계하여 객체 형식으로 반환하는 함수
+ * 익월과 전월을 기준으로 데이터를 묶어 저장
+ * @param {Array} data - 원본 데이터 배열
+ * @returns {Object} - 타입별 월 집계 데이터 객체
+ */
+const aggregateDataByTypeAndMonth = (data) => {
+  const summaryByType = {};
+
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth() + 1; // 월은 0부터 시작하므로 +1
+  const previousMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+  const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
+
+  const relevantMonths = [`${previousMonth}월`, `${nextMonth}월`];
+
+  data.forEach((entry) => {
+    const {
+      type,
+      month,
+      impressions,
+      clicks,
+      adCost,
+      conversion,
+      conversionRevenue,
+    } = entry;
+
+    // relevantMonths에 해당하지 않는 월은 제외
+    if (!relevantMonths.includes(month)) return;
+
+    // 타입별로 그룹화
+    if (!summaryByType[type]) {
+      summaryByType[type] = {
+        type,
+        months: {},
+      };
+    }
+
+    // 월별로 그룹화
+    if (!summaryByType[type].months[month]) {
+      summaryByType[type].months[month] = {
+        month,
+        impressions: 0,
+        clicks: 0,
+        adCost: 0,
+        conversion: 0,
+        conversionRevenue: 0,
+      };
+    }
+
+    // 집계 데이터 업데이트
+    summaryByType[type].months[month].impressions += impressions || 0;
+    summaryByType[type].months[month].clicks += clicks || 0;
+    summaryByType[type].months[month].adCost += adCost || 0;
+    summaryByType[type].months[month].conversion += conversion || 0;
+    summaryByType[type].months[month].conversionRevenue +=
+      conversionRevenue || 0;
+  });
+
+  // 추가 메트릭 계산 및 배열로 변환
+  const aggregatedArray = [];
+  for (const type in summaryByType) {
+    const typeData = summaryByType[type];
+    const monthsArray = [];
+
+    relevantMonths.forEach((relevantMonth) => {
+      if (typeData.months[relevantMonth]) {
+        const summary = typeData.months[relevantMonth];
+
+        // 메트릭 계산
+        summary.ctr =
+          summary.impressions > 0
+            ? (summary.clicks / summary.impressions) * 100
+            : 0;
+
+        summary.conversionRate =
+          summary.clicks > 0 ? (summary.conversion / summary.clicks) * 100 : 0;
+
+        summary.roas =
+          summary.adCost > 0
+            ? (summary.conversionRevenue / summary.adCost) * 100
+            : 0;
+
+        monthsArray.push(summary);
+      } else {
+        // 월 데이터가 없는 경우, 메트릭을 0으로 설정
+        monthsArray.push({
+          month: relevantMonth,
+          impressions: 0,
+          clicks: 0,
+          adCost: 0,
+          conversion: 0,
+          conversionRevenue: 0,
+          ctr: 0,
+          conversionRate: 0,
+          roas: 0,
+        });
+      }
+    });
+
+    // 월별 데이터 정렬 (전월, 익월 순)
+    monthsArray.sort((a, b) => {
+      const monthOrder = {
+        [`${previousMonth}월`]: 1,
+        [`${nextMonth}월`]: 2,
+      };
+      return monthOrder[a.month] - monthOrder[b.month];
+    });
+
+    typeData.months = monthsArray;
+    aggregatedArray.push(typeData);
+  }
+
+  const aggregatedObject = groupBy(aggregatedArray, "type");
+  return aggregatedObject;
+};
+
+/**
+ * 캠페인과 월을 기준으로 데이터를 집계하여 객체 형식으로 반환하는 함수
+ * 이전 월과 현재 월을 기준으로 데이터를 묶어 저장
+ * @param {Array} data - 원본 데이터 배열
+ * @returns {Object} - 캠페인별 월 집계 데이터 객체
+ */
+const aggregateDataByCampaignAndMonth = (data) => {
+  const summaryByCampaign = {};
+
+  const currentDate = new Date();
+  const currentMonth = currentDate.getMonth() + 1; // 월은 0부터 시작하므로 +1
+  const previousMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+
+  const relevantMonths = [`${previousMonth}월`, `${currentMonth}월`];
+
+  data.forEach((entry) => {
+    const {
+      campaign,
+      month,
+      impressions,
+      clicks,
+      adCost,
+      conversion,
+      conversionRevenue,
+    } = entry;
+
+    // relevantMonths에 해당하지 않는 월은 제외
+    if (!relevantMonths.includes(month)) return;
+
+    // 캠페인별로 그룹화
+    if (!summaryByCampaign[campaign]) {
+      summaryByCampaign[campaign] = {
+        campaign,
+        months: {},
+      };
+    }
+
+    // 월별로 그룹화
+    if (!summaryByCampaign[campaign].months[month]) {
+      summaryByCampaign[campaign].months[month] = {
+        month,
+        impressions: 0,
+        clicks: 0,
+        adCost: 0,
+        conversion: 0,
+        conversionRevenue: 0,
+      };
+    }
+
+    // 집계 데이터 업데이트
+    summaryByCampaign[campaign].months[month].impressions += impressions || 0;
+    summaryByCampaign[campaign].months[month].clicks += clicks || 0;
+    summaryByCampaign[campaign].months[month].adCost += adCost || 0;
+    summaryByCampaign[campaign].months[month].conversion += conversion || 0;
+    summaryByCampaign[campaign].months[month].conversionRevenue +=
+      conversionRevenue || 0;
+  });
+
+  // 추가 메트릭 계산 및 배열로 변환
+  const aggregatedArray = [];
+
+  for (const campaign in summaryByCampaign) {
+    const campaignData = summaryByCampaign[campaign];
+    const monthsArray = [];
+
+    // 기본 월 목록을 순회하며 누락된 월은 0으로 초기화
+    relevantMonths.forEach((relevantMonth) => {
+      if (campaignData.months[relevantMonth]) {
+        const summary = campaignData.months[relevantMonth];
+
+        // 메트릭 계산
+        summary.ctr =
+          summary.impressions > 0
+            ? (summary.clicks / summary.impressions) * 100
+            : 0;
+
+        summary.conversionRate =
+          summary.clicks > 0 ? (summary.conversion / summary.clicks) * 100 : 0;
+
+        summary.roas =
+          summary.adCost > 0
+            ? (summary.conversionRevenue / summary.adCost) * 100
+            : 0;
+
+        monthsArray.push(summary);
+      } else {
+        // 월 데이터가 없는 경우, 메트릭을 0으로 설정
+        monthsArray.push({
+          month: relevantMonth,
+          impressions: 0,
+          clicks: 0,
+          adCost: 0,
+          conversion: 0,
+          conversionRevenue: 0,
+          ctr: 0,
+          conversionRate: 0,
+          roas: 0,
+        });
+      }
+    });
+
+    // 월별 데이터 정렬 (예: 이전 월, 현재 월 순)
+    monthsArray.sort((a, b) => {
+      const monthOrder = {
+        [`${previousMonth}월`]: 1,
+        [`${currentMonth}월`]: 2,
+      };
+      return monthOrder[a.month] - monthOrder[b.month];
+    });
+
+    campaignData.months = monthsArray;
+    aggregatedArray.push(campaignData);
+  }
+
+  // 캠페인 이름 순으로 정렬 내림차순
+  const sortedArray = sortBy(aggregatedArray, "campaign").reverse();
+
+  // 타입별로 그룹화하여 객체 반환
+  const aggregatedObject = groupBy(sortedArray, "campaign");
+  return aggregatedObject;
+};
+
 module.exports = {
   aggregateBy,
   aggregateDataByCampaignAndWeek,
   aggregateDataByTypeAndWeek,
   aggregateDataByNoSearch,
+  aggregateDataByTypeAndMonth,
+  aggregateDataByCampaignAndMonth,
 };

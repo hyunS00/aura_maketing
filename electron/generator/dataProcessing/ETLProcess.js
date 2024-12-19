@@ -6,6 +6,7 @@ const {
   aggregateDataByCampaignAndWeek,
   aggregateDataByTypeAndWeek,
   aggregateDataByNoSearch,
+  aggregateDataByTypeAndMonth,
 } = require("./dataAggregator.js");
 /**
  * ETL 프로세스를 처리하는 클래스
@@ -84,19 +85,39 @@ class ETLProcess {
       ...entry,
       actualDate: this.parseDate(entry.day),
     }));
-    const assignedWeekData = this.assignWeekNumbers(parsedData);
-    const groupByedTypeData = aggregateDataByTypeAndWeek(assignedWeekData);
-    const groupByedCampaignData =
-      aggregateDataByCampaignAndWeek(assignedWeekData);
-    const groupByedNoSearchData = groupByedCampaignData.filter(
-      (item) => item.noSearchArea !== "검색 영역"
-    );
-    const aggregatedData = {
-      byType: groupByedTypeData,
-      byDay: aggregateBy(data, ["day", "type"]),
-      byWeek: groupByedCampaignData,
-      byNoSearch: groupByedNoSearchData,
-    };
+
+    let aggregatedData;
+    if (this.reportType === "weekly") {
+      const assignedWeekData = this.assignWeekNumbers(parsedData);
+      const groupByedTypeData = aggregateDataByTypeAndWeek(assignedWeekData);
+      const groupByedCampaignData =
+        aggregateDataByCampaignAndWeek(assignedWeekData);
+      const groupByedNoSearchData = groupByedCampaignData.filter(
+        (item) => item.noSearchArea !== "검색 영역"
+      );
+      aggregatedData = {
+        byType: groupByedTypeData,
+        byDay: aggregateBy(data, ["day", "type"]),
+        byWeek: groupByedCampaignData,
+        byNoSearch: groupByedNoSearchData,
+      };
+    } else if (this.reportType === "monthly") {
+      const assignedMonthData = this.assignMonthNumbers(parsedData);
+      const groupByedTypeData = aggregateDataByTypeAndMonth(assignedMonthData); // 필요시 수정
+      const groupByedCampaignData =
+        aggregateDataByCampaignAndWeek(assignedMonthData); // 필요시 수정
+      const groupByedNoSearchData = groupByedCampaignData.filter(
+        (item) => item.noSearchArea !== "검색 영역"
+      );
+      aggregatedData = {
+        byType: groupByedTypeData,
+        byMonth: aggregateBy(assignedMonthData, ["month"]),
+        byCampaign: groupByedCampaignData,
+        byNoSearch: groupByedNoSearchData,
+      };
+    } else {
+      throw new Error(`Unsupported reportType: ${this.reportType}`);
+    }
 
     return aggregatedData;
   }
@@ -128,7 +149,12 @@ class ETLProcess {
       return null; // 또는 적절한 기본값 반환
     }
   }
-
+  /**
+   * assignWeekNumbers 함수는 주어진 데이터에 주차 번호를 할당합니다.
+   * 날짜를 오름차순으로 정렬한 후, 각 항목에 대해 1주차, 2주차, 기타로 주차를 지정합니다.
+   * @param {Array} data - 주차 번호를 할당할 데이터 배열
+   * @returns {Array} 주차 번호가 할당된 데이터 배열
+   */
   assignWeekNumbers(data) {
     if (data.length === 0) return data;
 
@@ -157,6 +183,45 @@ class ETLProcess {
       } else {
         // 14일 이후: 기타
         return { ...entry, week: "기타" };
+      }
+    });
+  }
+
+  /**
+   * assignMonthNumbers 함수는 주어진 데이터에 월 번호를 할당합니다.
+   * 이전 월과 현재 월을 기준으로 각 항목에 대해 '이전월', '현재월', '기타'로 월을 지정합니다.
+   * @param {Array} data - 월 번호를 할당할 데이터 배열
+   * @returns {Array} 월 번호가 할당된 데이터 배열
+   */
+  assignMonthNumbers(data) {
+    if (data.length === 0) return data;
+
+    // 날짜를 오름차순으로 정렬
+    const sortedData = data.sort((a, b) =>
+      compareAsc(a.actualDate, b.actualDate)
+    );
+
+    // 첫 번째 데이터의 월을 기준으로 이전 월과 현재 월 설정
+    const firstDate = sortedData[0].actualDate;
+    const currentMonth = firstDate.getMonth();
+    const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+    const currentYear = firstDate.getFullYear();
+    const previousYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+
+    return sortedData.map((entry) => {
+      const entryDate = entry.actualDate;
+      const entryMonth = entryDate.getMonth();
+      const entryYear = entryDate.getFullYear();
+
+      if (entryYear === previousYear && entryMonth === previousMonth) {
+        // 이전 월
+        return { ...entry, month: "이전월" };
+      } else if (entryYear === currentYear && entryMonth === currentMonth) {
+        // 현재 월
+        return { ...entry, month: "현재월" };
+      } else {
+        // 기타
+        return { ...entry, month: "기타" };
       }
     });
   }
