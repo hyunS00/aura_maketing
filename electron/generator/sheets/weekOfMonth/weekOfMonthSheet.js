@@ -1,5 +1,5 @@
 const reportConfig = require("../../config/reportConfig.js");
-const writeWeekData = require("./writeDayData.js");
+const writeMonthData = require("./writeMonthData.js");
 const groupBy = require("../../utils/groupBy.js");
 const autoFitColumns = require("../../utils/autoFit.js");
 /**
@@ -8,8 +8,9 @@ const autoFitColumns = require("../../utils/autoFit.js");
  * @param {Array} data - 요일별 데이터 배열
  * @param {number} offset - 데이터 작성 시작 행
  */
-const writeDayOfWeekSheet = (worksheet, data, platform, reportType) => {
+const writeWeekOfMonthSheet = (worksheet, data, platform, reportType) => {
   const typeData = groupBy(data, "type");
+  console.log(typeData);
 
   const {
     [platform]: {
@@ -22,7 +23,7 @@ const writeDayOfWeekSheet = (worksheet, data, platform, reportType) => {
     },
   } = reportConfig;
   type.forEach((typeValue) => {
-    writeWeekData(
+    writeMonthData(
       worksheet,
       typeData[typeValue],
       typeRowIndex[typeValue],
@@ -33,4 +34,4 @@ const writeDayOfWeekSheet = (worksheet, data, platform, reportType) => {
   autoFitColumns(worksheet, ["Q", "U"]);
 };
 
-module.exports = writeDayOfWeekSheet;
+module.exports = writeWeekOfMonthSheet;

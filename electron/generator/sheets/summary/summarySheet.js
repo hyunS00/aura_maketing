@@ -7,17 +7,30 @@ const reportConfig = require("../../config/reportConfig.js");
  * @param {Array} data - 요약 데이터 배열
  * @param {string} platform - 플랫폼 이름
  */
-const writeSummarySheet = (worksheet, data, code, companyName, platform) => {
+const writeSummarySheet = (
+  worksheet,
+  data,
+  code,
+  companyName,
+  platform,
+  reportType
+) => {
   const {
     [platform]: {
-      weekly: { type },
+      [reportType]: { type },
     },
   } = reportConfig;
-  console.log(code, companyName);
   worksheet.cell("C7").value(code);
   worksheet.cell("C8").value(companyName);
+
   type.forEach((typeValue) => {
-    writeSummaryData(worksheet, data[typeValue][0].weeks, typeValue, platform);
+    writeSummaryData(
+      worksheet,
+      data[typeValue][0][reportType],
+      typeValue,
+      platform,
+      reportType
+    );
   });
 };
 

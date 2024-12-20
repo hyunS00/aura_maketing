@@ -55,7 +55,7 @@ const Home = () => {
       return;
     }
 
-    console.log(code, name, platform, type, filePaths.current);
+    console.log(code, name, platform, type, filePaths);
     setIsProcessing(true);
     const reportBuffer = await window.electronAPI.generateReport({
       filePaths,
@@ -97,7 +97,7 @@ const Home = () => {
         {type && type === "weekly" ? (
           <WeeklyFile filePaths={filePaths} setFilePaths={setFilePaths} />
         ) : (
-          <MonthlyFile setFiles={setFilePaths} />
+          <MonthlyFile filePaths={filePaths} setFilePaths={setFilePaths} />
         )}
         {isProcessing ? (
           <LoadingButton />

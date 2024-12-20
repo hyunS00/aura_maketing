@@ -1,9 +1,11 @@
 const writeCoupangWeeklyReportTemplate = require("./coupangWeeklyReportTemplate.js");
+const writeCoupangMonthlyReportTemplate = require("./coupangMonthlyReportTemplate.js");
 // const writeMonthlyReportTemplate =require  ( "./monthlyReportTemplate");
 
 // 템플릿 핸들러 매핑
 const templateHandlers = {
   coupangweekly: writeCoupangWeeklyReportTemplate,
+  coupangmonthly: writeCoupangMonthlyReportTemplate,
   //   monthly: writeMonthlyReportTemplate,
 };
 

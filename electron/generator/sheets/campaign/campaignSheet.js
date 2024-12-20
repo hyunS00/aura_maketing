@@ -9,7 +9,13 @@ const autoFitColumns = require("../../utils/autoFit.js");
  * @param {number} offset - 데이터 작성 시작 행
  * @param {string} platform - 플랫폼 이름
  */
-const writeCampaignSheet = (worksheet, data, offset = 62, platform) => {
+const writeCampaignSheet = (
+  worksheet,
+  data,
+  offset = 62,
+  platform,
+  reportType
+) => {
   console.log("캠페인 시트 작성 시작!");
   let rowIndex = offset;
 
@@ -23,13 +29,13 @@ const writeCampaignSheet = (worksheet, data, offset = 62, platform) => {
   }));
   // 캠페인 데이터 작성
   data.forEach((record) => {
-    writeCampaignData(worksheet, record, rowIndex);
-    record.weeks.forEach((weekData, index) => {
-      totals[index].impressions += weekData?.impressions || 0;
-      totals[index].clicks += weekData?.clicks || 0;
-      totals[index].adCost += weekData?.adCost || 0;
-      totals[index].conversion += weekData?.conversion || 0;
-      totals[index].conversionRevenue += weekData?.conversionRevenue || 0;
+    writeCampaignData(worksheet, record, rowIndex, reportType);
+    record[reportType].forEach((data, index) => {
+      totals[index].impressions += data?.impressions || 0;
+      totals[index].clicks += data?.clicks || 0;
+      totals[index].adCost += data?.adCost || 0;
+      totals[index].conversion += data?.conversion || 0;
+      totals[index].conversionRevenue += data?.conversionRevenue || 0;
     });
     rowIndex++;
   });
@@ -37,7 +43,7 @@ const writeCampaignSheet = (worksheet, data, offset = 62, platform) => {
   writeSummaryRow(worksheet, 61, totals);
 
   // TOP10 데이터 작성
-  writeCampaignTop10Data(worksheet, data);
+  writeCampaignTop10Data(worksheet, data, reportType);
 
   autoFitColumns(worksheet, ["C", "E", "G", "M", "Q", "S", "U"]);
   console.log("캠페인 시트 작성 완료!");

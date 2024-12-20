@@ -7,6 +7,7 @@ const {
   aggregateDataByTypeAndWeek,
   aggregateDataByNoSearch,
   aggregateDataByTypeAndMonth,
+  aggregateDataByCampaignAndMonth,
 } = require("./dataAggregator.js");
 /**
  * ETL 프로세스를 처리하는 클래스
@@ -102,17 +103,39 @@ class ETLProcess {
         byNoSearch: groupByedNoSearchData,
       };
     } else if (this.reportType === "monthly") {
+      // 1. 최근 월 식별
+      const latestDate = parsedData.reduce((max, entry) => {
+        return entry.actualDate > max ? entry.actualDate : max;
+      }, parsedData[0].actualDate);
+
+      const latestYear = latestDate.getFullYear();
+      const latestMonth = latestDate.getMonth(); // 0 기반
+
+      // 2. 최근 월 데이터 필터링
+      const latestMonthData = parsedData.filter(
+        (entry) =>
+          entry.actualDate.getFullYear() === latestYear &&
+          entry.actualDate.getMonth() === latestMonth
+      );
+
+      // 3. 주차 번호 할당
+      const assignedWeekData = this.assignWeekNumbers(latestMonthData);
+
       const assignedMonthData = this.assignMonthNumbers(parsedData);
-      const groupByedTypeData = aggregateDataByTypeAndMonth(assignedMonthData); // 필요시 수정
+
+      // 4. 데이터 집계
+      const groupByedTypeData = aggregateDataByTypeAndMonth(assignedMonthData);
+
       const groupByedCampaignData =
-        aggregateDataByCampaignAndWeek(assignedMonthData); // 필요시 수정
+        aggregateDataByCampaignAndMonth(assignedMonthData);
       const groupByedNoSearchData = groupByedCampaignData.filter(
         (item) => item.noSearchArea !== "검색 영역"
       );
+
       aggregatedData = {
         byType: groupByedTypeData,
-        byMonth: aggregateBy(assignedMonthData, ["month"]),
-        byCampaign: groupByedCampaignData,
+        byWeek: aggregateBy(assignedWeekData, ["week", "type"]),
+        byMonth: groupByedCampaignData,
         byNoSearch: groupByedNoSearchData,
       };
     } else {
@@ -151,8 +174,8 @@ class ETLProcess {
   }
   /**
    * assignWeekNumbers 함수는 주어진 데이터에 주차 번호를 할당합니다.
-   * 날짜를 오름차순으로 정렬한 후, 각 항목에 대해 1주차, 2주차, 기타로 주차를 지정합니다.
-   * @param {Array} data - 주차 번호를 할당할 데이터 배열
+   * 각 월별로 1주차부터 4주차까지 할당됩니다.
+   * @param {Array} data - 주차 번호를 할당할 데이터 배열 (같은 월로 제한됨)
    * @returns {Array} 주차 번호가 할당된 데이터 배열
    */
   assignWeekNumbers(data) {
@@ -162,28 +185,19 @@ class ETLProcess {
     const sortedData = data.sort((a, b) =>
       compareAsc(a.actualDate, b.actualDate)
     );
-
-    // 첫 번째 날짜 기준으로 1주차와 2주차 할당
+    // 첫 번째 날짜 기준으로 주차 할당
     const startDate = sortedData[0].actualDate;
-    const week1End = addDays(startDate, 6); // 1주차: 0-6일
-    const week2End = addDays(startDate, 13); // 2주차: 7-13일
+    const weekly = ["1주차", "2주차", "3주차", "4주차", "5주차"];
+
     return sortedData.map((entry) => {
-      if (
-        isBefore(entry.actualDate, week1End) ||
-        isSameDay(entry.actualDate, week1End)
-      ) {
-        // 0-7일: 1주차
-        return { ...entry, week: "1주차" };
-      } else if (
-        isBefore(entry.actualDate, week2End) ||
-        isSameDay(entry.actualDate, week2End)
-      ) {
-        // 7-14일: 2주차
-        return { ...entry, week: "2주차" };
-      } else {
-        // 14일 이후: 기타
-        return { ...entry, week: "기타" };
-      }
+      const diffInDays = Math.floor(
+        (entry.actualDate - startDate) / (1000 * 60 * 60 * 24)
+      );
+      const weekNumber = Math.min(
+        Math.floor(diffInDays / 7),
+        weekly.length - 1
+      );
+      return { ...entry, week: weekly[weekNumber] };
     });
   }
 
@@ -203,26 +217,12 @@ class ETLProcess {
 
     // 첫 번째 데이터의 월을 기준으로 이전 월과 현재 월 설정
     const firstDate = sortedData[0].actualDate;
-    const currentMonth = firstDate.getMonth();
-    const previousMonth = currentMonth === 0 ? 11 : currentMonth - 1;
-    const currentYear = firstDate.getFullYear();
-    const previousYear = currentMonth === 0 ? currentYear - 1 : currentYear;
 
     return sortedData.map((entry) => {
       const entryDate = entry.actualDate;
-      const entryMonth = entryDate.getMonth();
-      const entryYear = entryDate.getFullYear();
+      const entryMonth = entryDate.getMonth() + 1;
 
-      if (entryYear === previousYear && entryMonth === previousMonth) {
-        // 이전 월
-        return { ...entry, month: "이전월" };
-      } else if (entryYear === currentYear && entryMonth === currentMonth) {
-        // 현재 월
-        return { ...entry, month: "현재월" };
-      } else {
-        // 기타
-        return { ...entry, month: "기타" };
-      }
+      return { ...entry, month: `${entryMonth}월` };
     });
   }
 

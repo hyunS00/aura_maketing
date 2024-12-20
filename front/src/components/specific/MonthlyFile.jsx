@@ -1,47 +1,38 @@
 import PropTyps from "prop-types";
+import InputFile from "../common/InputFile";
 
-const MonthlyFile = ({ setFiles }) => {
-  const handlePrevChange = (e) => {
-    console.log(e.target.files[0]);
-    setFiles((pre) => ({
+const MonthlyFile = ({ filePaths, setFilePaths }) => {
+  const handlePrevChange = async () => {
+    const filePath = await window.electronAPI.uploadFile();
+    setFilePaths((pre) => ({
       ...pre,
-      prev: e.target.files[0],
+      prev: filePath,
     }));
   };
 
-  const handleCurrentChange = (e) => {
-    console.log(e.target.files[0]);
-    setFiles((pre) => ({
+  const handleCurrentChange = async (e) => {
+    const filePath = await window.electronAPI.uploadFile();
+    setFilePaths((pre) => ({
       ...pre,
-      current: e.target.files[0],
+      current: filePath,
     }));
   };
   return (
     <>
       <label className="form-control w-full max-w-xs mb-4">
         <span className="label label-text">전월 데이터</span>
-        <input
-          type="file"
-          className="file-input file-input-bordered w-full max-w-xs"
-          accept=".csv,.xlsx"
-          onChange={handlePrevChange}
-        />
+        <InputFile filePath={filePaths.prev} onClick={handlePrevChange} />
       </label>
       <label className="form-control w-full max-w-xs mb-8">
         <span className="label label-text">이번월 데이터</span>
-        <input
-          type="file"
-          className="file-input file-input-bordered w-full max-w-xs"
-          accept=".csv,.xlsx"
-          onChange={handleCurrentChange}
-        />
+        <InputFile filePath={filePaths.current} onClick={handleCurrentChange} />
       </label>
     </>
   );
 };
 
 MonthlyFile.propTypes = {
-  setFiles: PropTyps.func.isRequired,
+  setFilePaths: PropTyps.func.isRequired,
 };
 
 export default MonthlyFile;

@@ -63,7 +63,7 @@ const aggregateDataByCampaignAndWeek = (data) => {
   const summaryByCampaign = {};
 
   // 기본 주차 목록 정의
-  const defaultWeeks = ["1주차", "2주차", "기타"];
+  const defaultWeekly = ["1주차", "2주차", "기타"];
 
   data.forEach((entry) => {
     const {
@@ -83,13 +83,13 @@ const aggregateDataByCampaignAndWeek = (data) => {
       summaryByCampaign[campaign] = {
         campaign,
         type: type || "Unknown",
-        weeks: {},
+        weekly: {},
       };
     }
 
     // 주차별로 그룹화
-    if (!summaryByCampaign[campaign].weeks[week]) {
-      summaryByCampaign[campaign].weeks[week] = {
+    if (!summaryByCampaign[campaign].weekly[week]) {
+      summaryByCampaign[campaign].weekly[week] = {
         week,
         impressions: 0,
         clicks: 0,
@@ -100,11 +100,11 @@ const aggregateDataByCampaignAndWeek = (data) => {
     }
 
     // 집계 데이터 업데이트
-    summaryByCampaign[campaign].weeks[week].impressions += impressions || 0;
-    summaryByCampaign[campaign].weeks[week].clicks += clicks || 0;
-    summaryByCampaign[campaign].weeks[week].adCost += adCost || 0;
-    summaryByCampaign[campaign].weeks[week].conversion += conversion || 0;
-    summaryByCampaign[campaign].weeks[week].conversionRevenue +=
+    summaryByCampaign[campaign].weekly[week].impressions += impressions || 0;
+    summaryByCampaign[campaign].weekly[week].clicks += clicks || 0;
+    summaryByCampaign[campaign].weekly[week].adCost += adCost || 0;
+    summaryByCampaign[campaign].weekly[week].conversion += conversion || 0;
+    summaryByCampaign[campaign].weekly[week].conversionRevenue +=
       conversionRevenue || 0;
   });
 
@@ -113,12 +113,12 @@ const aggregateDataByCampaignAndWeek = (data) => {
 
   for (const campaign in summaryByCampaign) {
     const campaignData = summaryByCampaign[campaign];
-    const weeksArray = [];
+    const weeklyArray = [];
 
     // 기본 주차 목록을 순회하며 누락된 주차는 0으로 초기화
-    defaultWeeks.forEach((defaultWeek) => {
-      if (campaignData.weeks[defaultWeek]) {
-        const summary = campaignData.weeks[defaultWeek];
+    defaultWeekly.forEach((defaultWeek) => {
+      if (campaignData.weekly[defaultWeek]) {
+        const summary = campaignData.weekly[defaultWeek];
 
         // 메트릭 계산
         summary.ctr =
@@ -134,10 +134,10 @@ const aggregateDataByCampaignAndWeek = (data) => {
             ? (summary.conversionRevenue / summary.adCost) * 100
             : 0;
 
-        weeksArray.push(summary);
+        weeklyArray.push(summary);
       } else {
         // 주차 데이터가 없는 경우, 메트릭을 0으로 설정
-        weeksArray.push({
+        weeklyArray.push({
           week: defaultWeek,
           impressions: 0,
           clicks: 0,
@@ -153,13 +153,13 @@ const aggregateDataByCampaignAndWeek = (data) => {
     });
 
     // 주차별 데이터 정렬 (예: 1주차, 2주차 순)
-    weeksArray.sort((a, b) => {
+    weeklyArray.sort((a, b) => {
       const weekNumberA = parseInt(a.week.replace(/\D/g, ""), 10);
       const weekNumberB = parseInt(b.week.replace(/\D/g, ""), 10);
       return weekNumberA - weekNumberB;
     });
 
-    campaignData.weeks = weeksArray;
+    campaignData.weekly = weeklyArray;
     aggregatedArray.push(campaignData);
   }
 
@@ -179,7 +179,7 @@ const aggregateDataByTypeAndWeek = (data) => {
   const summaryByType = {};
 
   // 기본 주차 목록 정의
-  const defaultWeeks = ["1주차", "2주차", "기타"];
+  const defaultWeekly = ["1주차", "2주차", "기타"];
 
   data.forEach((entry) => {
     const {
@@ -196,13 +196,13 @@ const aggregateDataByTypeAndWeek = (data) => {
     if (!summaryByType[type]) {
       summaryByType[type] = {
         type,
-        weeks: {},
+        weekly: {},
       };
     }
 
     // 주차별로 그룹화
-    if (!summaryByType[type].weeks[week]) {
-      summaryByType[type].weeks[week] = {
+    if (!summaryByType[type].weekly[week]) {
+      summaryByType[type].weekly[week] = {
         week,
         impressions: 0,
         clicks: 0,
@@ -213,23 +213,24 @@ const aggregateDataByTypeAndWeek = (data) => {
     }
 
     // 집계 데이터 업데이트
-    summaryByType[type].weeks[week].impressions += impressions || 0;
-    summaryByType[type].weeks[week].clicks += clicks || 0;
-    summaryByType[type].weeks[week].adCost += adCost || 0;
-    summaryByType[type].weeks[week].conversion += conversion || 0;
-    summaryByType[type].weeks[week].conversionRevenue += conversionRevenue || 0;
+    summaryByType[type].weekly[week].impressions += impressions || 0;
+    summaryByType[type].weekly[week].clicks += clicks || 0;
+    summaryByType[type].weekly[week].adCost += adCost || 0;
+    summaryByType[type].weekly[week].conversion += conversion || 0;
+    summaryByType[type].weekly[week].conversionRevenue +=
+      conversionRevenue || 0;
   });
 
   // 추가 메트릭 계산 및 배열로 변환
   const aggregatedArray = [];
   for (const type in summaryByType) {
     const typeData = summaryByType[type];
-    const weeksArray = [];
+    const weeklyArray = [];
 
     // 기본 주차 목록을 순회하며 누락된 주차는 0으로 초기화
-    defaultWeeks.forEach((defaultWeek) => {
-      if (typeData.weeks[defaultWeek]) {
-        const summary = typeData.weeks[defaultWeek];
+    defaultWeekly.forEach((defaultWeek) => {
+      if (typeData.weekly[defaultWeek]) {
+        const summary = typeData.weekly[defaultWeek];
 
         // 메트릭 계산
         summary.ctr =
@@ -245,10 +246,10 @@ const aggregateDataByTypeAndWeek = (data) => {
             ? (summary.conversionRevenue / summary.adCost) * 100
             : 0;
 
-        weeksArray.push(summary);
+        weeklyArray.push(summary);
       } else {
         // 주차 데이터가 없는 경우, 메트릭을 0으로 설정
-        weeksArray.push({
+        weeklyArray.push({
           week: defaultWeek,
           impressions: 0,
           clicks: 0,
@@ -263,12 +264,12 @@ const aggregateDataByTypeAndWeek = (data) => {
     });
 
     // 주차별 데이터 정렬 (예: 1주차, 2주차, 기타 순)
-    weeksArray.sort((a, b) => {
+    weeklyArray.sort((a, b) => {
       const weekOrder = { "1주차": 1, "2주차": 2, 기타: 3 };
       return weekOrder[a.week] - weekOrder[b.week];
     });
 
-    typeData.weeks = weeksArray;
+    typeData.weekly = weeklyArray;
     aggregatedArray.push(typeData);
   }
   const aggregatedObject = groupBy(aggregatedArray, "type");
@@ -283,7 +284,7 @@ const aggregateDataByTypeAndWeek = (data) => {
 const aggregateDataByNoSearch = (data) => {
   const summaryByNoSearch = {};
   // 기본 주차 목록 정의
-  const defaultWeeks = ["1주차", "2주차", "기타"];
+  const defaultWeekly = ["1주차", "2주차", "기타"];
 
   data.forEach((entry) => {
     const {
@@ -301,13 +302,13 @@ const aggregateDataByNoSearch = (data) => {
     if (!summaryByNoSearch[type]) {
       summaryByNoSearch[type] = {
         type,
-        weeks: {},
+        weekly: {},
       };
     }
 
     // 주차별로 그룹화
-    if (!summaryByNoSearch[type].weeks[week]) {
-      summaryByNoSearch[type].weeks[week] = {
+    if (!summaryByNoSearch[type].weekly[week]) {
+      summaryByNoSearch[type].weekly[week] = {
         week,
         impressions: 0,
         clicks: 0,
@@ -318,11 +319,11 @@ const aggregateDataByNoSearch = (data) => {
     }
 
     // 집계 데이터 업데이트
-    summaryByNoSearch[type].weeks[week].impressions += impressions || 0;
-    summaryByNoSearch[type].weeks[week].clicks += clicks || 0;
-    summaryByNoSearch[type].weeks[week].adCost += adCost || 0;
-    summaryByNoSearch[type].weeks[week].conversion += conversion || 0;
-    summaryByNoSearch[type].weeks[week].conversionRevenue +=
+    summaryByNoSearch[type].weekly[week].impressions += impressions || 0;
+    summaryByNoSearch[type].weekly[week].clicks += clicks || 0;
+    summaryByNoSearch[type].weekly[week].adCost += adCost || 0;
+    summaryByNoSearch[type].weekly[week].conversion += conversion || 0;
+    summaryByNoSearch[type].weekly[week].conversionRevenue +=
       conversionRevenue || 0;
   });
 
@@ -330,12 +331,12 @@ const aggregateDataByNoSearch = (data) => {
   const aggregatedArray = [];
   for (const type in summaryByNoSearch) {
     const typeData = summaryByNoSearch[type];
-    const weeksArray = [];
+    const weeklyArray = [];
 
     // 기본 주차 목록을 순회하며 누락된 주차는 0으로 초기화
-    defaultWeeks.forEach((defaultWeek) => {
-      if (typeData.weeks[defaultWeek]) {
-        const summary = typeData.weeks[defaultWeek];
+    defaultWeekly.forEach((defaultWeek) => {
+      if (typeData.weekly[defaultWeek]) {
+        const summary = typeData.weekly[defaultWeek];
 
         // 메트릭 계산
         summary.ctr =
@@ -351,10 +352,10 @@ const aggregateDataByNoSearch = (data) => {
             ? (summary.conversionRevenue / summary.adCost) * 100
             : 0;
 
-        weeksArray.push(summary);
+        weeklyArray.push(summary);
       } else {
         // 주차 데이터가 없는 경우, 메트릭을 0으로 설정
-        weeksArray.push({
+        weeklyArray.push({
           week: defaultWeek,
           impressions: 0,
           clicks: 0,
@@ -369,12 +370,12 @@ const aggregateDataByNoSearch = (data) => {
     });
 
     // 주차별 데이터 정렬 (예: 1주차, 2주차, 기타 순)
-    weeksArray.sort((a, b) => {
+    weeklyArray.sort((a, b) => {
       const weekOrder = { "1주차": 1, "2주차": 2, 기타: 3 };
       return weekOrder[a.week] - weekOrder[b.week];
     });
 
-    typeData.weeks = weeksArray;
+    typeData.weekly = weeklyArray;
     aggregatedArray.push(typeData);
   }
   return aggregatedArray;
@@ -394,7 +395,7 @@ const aggregateDataByTypeAndMonth = (data) => {
   const previousMonth = currentMonth === 1 ? 12 : currentMonth - 1;
   const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
 
-  const relevantMonths = [`${previousMonth}월`, `${nextMonth}월`];
+  const relevantMonthly = [`${previousMonth}월`, `${nextMonth}월`];
 
   data.forEach((entry) => {
     const {
@@ -407,20 +408,20 @@ const aggregateDataByTypeAndMonth = (data) => {
       conversionRevenue,
     } = entry;
 
-    // relevantMonths에 해당하지 않는 월은 제외
-    if (!relevantMonths.includes(month)) return;
+    // relevantMonthly에 해당하지 않는 월은 제외
+    if (!relevantMonthly.includes(month)) return;
 
     // 타입별로 그룹화
     if (!summaryByType[type]) {
       summaryByType[type] = {
         type,
-        months: {},
+        monthly: {},
       };
     }
 
     // 월별로 그룹화
-    if (!summaryByType[type].months[month]) {
-      summaryByType[type].months[month] = {
+    if (!summaryByType[type].monthly[month]) {
+      summaryByType[type].monthly[month] = {
         month,
         impressions: 0,
         clicks: 0,
@@ -431,11 +432,11 @@ const aggregateDataByTypeAndMonth = (data) => {
     }
 
     // 집계 데이터 업데이트
-    summaryByType[type].months[month].impressions += impressions || 0;
-    summaryByType[type].months[month].clicks += clicks || 0;
-    summaryByType[type].months[month].adCost += adCost || 0;
-    summaryByType[type].months[month].conversion += conversion || 0;
-    summaryByType[type].months[month].conversionRevenue +=
+    summaryByType[type].monthly[month].impressions += impressions || 0;
+    summaryByType[type].monthly[month].clicks += clicks || 0;
+    summaryByType[type].monthly[month].adCost += adCost || 0;
+    summaryByType[type].monthly[month].conversion += conversion || 0;
+    summaryByType[type].monthly[month].conversionRevenue +=
       conversionRevenue || 0;
   });
 
@@ -443,11 +444,11 @@ const aggregateDataByTypeAndMonth = (data) => {
   const aggregatedArray = [];
   for (const type in summaryByType) {
     const typeData = summaryByType[type];
-    const monthsArray = [];
+    const monthlyArray = [];
 
-    relevantMonths.forEach((relevantMonth) => {
-      if (typeData.months[relevantMonth]) {
-        const summary = typeData.months[relevantMonth];
+    relevantMonthly.forEach((relevantMonth) => {
+      if (typeData.monthly[relevantMonth]) {
+        const summary = typeData.monthly[relevantMonth];
 
         // 메트릭 계산
         summary.ctr =
@@ -463,10 +464,10 @@ const aggregateDataByTypeAndMonth = (data) => {
             ? (summary.conversionRevenue / summary.adCost) * 100
             : 0;
 
-        monthsArray.push(summary);
+        monthlyArray.push(summary);
       } else {
         // 월 데이터가 없는 경우, 메트릭을 0으로 설정
-        monthsArray.push({
+        monthlyArray.push({
           month: relevantMonth,
           impressions: 0,
           clicks: 0,
@@ -481,7 +482,7 @@ const aggregateDataByTypeAndMonth = (data) => {
     });
 
     // 월별 데이터 정렬 (전월, 익월 순)
-    monthsArray.sort((a, b) => {
+    monthlyArray.sort((a, b) => {
       const monthOrder = {
         [`${previousMonth}월`]: 1,
         [`${nextMonth}월`]: 2,
@@ -489,7 +490,7 @@ const aggregateDataByTypeAndMonth = (data) => {
       return monthOrder[a.month] - monthOrder[b.month];
     });
 
-    typeData.months = monthsArray;
+    typeData.monthly = monthlyArray;
     aggregatedArray.push(typeData);
   }
 
@@ -510,11 +511,12 @@ const aggregateDataByCampaignAndMonth = (data) => {
   const currentMonth = currentDate.getMonth() + 1; // 월은 0부터 시작하므로 +1
   const previousMonth = currentMonth === 1 ? 12 : currentMonth - 1;
 
-  const relevantMonths = [`${previousMonth}월`, `${currentMonth}월`];
+  const relevantMonthly = [`${previousMonth}월`, `${currentMonth}월`];
 
   data.forEach((entry) => {
     const {
       campaign,
+      type,
       month,
       impressions,
       clicks,
@@ -523,20 +525,21 @@ const aggregateDataByCampaignAndMonth = (data) => {
       conversionRevenue,
     } = entry;
 
-    // relevantMonths에 해당하지 않는 월은 제외
-    if (!relevantMonths.includes(month)) return;
+    // relevantMonthly에 해당하지 않는 월은 제외
+    if (!relevantMonthly.includes(month)) return;
 
     // 캠페인별로 그룹화
     if (!summaryByCampaign[campaign]) {
       summaryByCampaign[campaign] = {
         campaign,
-        months: {},
+        type: type || "Unknown",
+        monthly: {},
       };
     }
 
     // 월별로 그룹화
-    if (!summaryByCampaign[campaign].months[month]) {
-      summaryByCampaign[campaign].months[month] = {
+    if (!summaryByCampaign[campaign].monthly[month]) {
+      summaryByCampaign[campaign].monthly[month] = {
         month,
         impressions: 0,
         clicks: 0,
@@ -547,11 +550,11 @@ const aggregateDataByCampaignAndMonth = (data) => {
     }
 
     // 집계 데이터 업데이트
-    summaryByCampaign[campaign].months[month].impressions += impressions || 0;
-    summaryByCampaign[campaign].months[month].clicks += clicks || 0;
-    summaryByCampaign[campaign].months[month].adCost += adCost || 0;
-    summaryByCampaign[campaign].months[month].conversion += conversion || 0;
-    summaryByCampaign[campaign].months[month].conversionRevenue +=
+    summaryByCampaign[campaign].monthly[month].impressions += impressions || 0;
+    summaryByCampaign[campaign].monthly[month].clicks += clicks || 0;
+    summaryByCampaign[campaign].monthly[month].adCost += adCost || 0;
+    summaryByCampaign[campaign].monthly[month].conversion += conversion || 0;
+    summaryByCampaign[campaign].monthly[month].conversionRevenue +=
       conversionRevenue || 0;
   });
 
@@ -560,12 +563,12 @@ const aggregateDataByCampaignAndMonth = (data) => {
 
   for (const campaign in summaryByCampaign) {
     const campaignData = summaryByCampaign[campaign];
-    const monthsArray = [];
+    const monthlyArray = [];
 
     // 기본 월 목록을 순회하며 누락된 월은 0으로 초기화
-    relevantMonths.forEach((relevantMonth) => {
-      if (campaignData.months[relevantMonth]) {
-        const summary = campaignData.months[relevantMonth];
+    relevantMonthly.forEach((relevantMonth) => {
+      if (campaignData.monthly[relevantMonth]) {
+        const summary = campaignData.monthly[relevantMonth];
 
         // 메트릭 계산
         summary.ctr =
@@ -581,10 +584,10 @@ const aggregateDataByCampaignAndMonth = (data) => {
             ? (summary.conversionRevenue / summary.adCost) * 100
             : 0;
 
-        monthsArray.push(summary);
+        monthlyArray.push(summary);
       } else {
         // 월 데이터가 없는 경우, 메트릭을 0으로 설정
-        monthsArray.push({
+        monthlyArray.push({
           month: relevantMonth,
           impressions: 0,
           clicks: 0,
@@ -599,7 +602,7 @@ const aggregateDataByCampaignAndMonth = (data) => {
     });
 
     // 월별 데이터 정렬 (예: 이전 월, 현재 월 순)
-    monthsArray.sort((a, b) => {
+    monthlyArray.sort((a, b) => {
       const monthOrder = {
         [`${previousMonth}월`]: 1,
         [`${currentMonth}월`]: 2,
@@ -607,16 +610,14 @@ const aggregateDataByCampaignAndMonth = (data) => {
       return monthOrder[a.month] - monthOrder[b.month];
     });
 
-    campaignData.months = monthsArray;
+    campaignData.monthly = monthlyArray;
     aggregatedArray.push(campaignData);
   }
 
   // 캠페인 이름 순으로 정렬 내림차순
   const sortedArray = sortBy(aggregatedArray, "campaign").reverse();
 
-  // 타입별로 그룹화하여 객체 반환
-  const aggregatedObject = groupBy(sortedArray, "campaign");
-  return aggregatedObject;
+  return sortedArray;
 };
 
 module.exports = {

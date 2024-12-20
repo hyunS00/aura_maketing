@@ -5,7 +5,7 @@ const writeCampaignData = require("../../utils/campaignUtil.js");
  * @param {object} worksheet - XlsxPopulate 워크시트 객체
  * @param {Array} data - 캠페인 데이터 배열
  */
-const writeCampaignTop10Data = (worksheet, data) => {
+const writeCampaignTop10Data = (worksheet, data, reportType) => {
   const TOP10_OFFSETS = {
     impressions: 5,
     clicks: 19,
@@ -13,9 +13,9 @@ const writeCampaignTop10Data = (worksheet, data) => {
     roas: 47,
   };
   Object.entries(TOP10_OFFSETS).forEach(([key, startRow]) => {
-    const topData = getTop10Data(data, key);
+    const topData = getTop10Data(data, key, reportType);
     topData.forEach((record, index) => {
-      writeCampaignData(worksheet, record, startRow + index);
+      writeCampaignData(worksheet, record, startRow + index, reportType);
     });
   });
 

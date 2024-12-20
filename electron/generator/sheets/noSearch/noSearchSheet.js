@@ -2,7 +2,7 @@ const writeNoSearchData = require("./writeNoSearchData.js");
 const writeSummaryRow = require("./writeSummaryRow.js");
 const autoFitColumns = require("../../utils/autoFit.js");
 
-const writeNoSearchSheet = (worksheet, data, offset = 6) => {
+const writeNoSearchSheet = (worksheet, data, reportType, offset = 6) => {
   let rowIndex = offset;
 
   // 합계 초기화
@@ -15,13 +15,13 @@ const writeNoSearchSheet = (worksheet, data, offset = 6) => {
   }));
   // 캠페인 데이터 작성
   data.forEach((record) => {
-    writeNoSearchData(worksheet, record, rowIndex);
-    record.weeks.forEach((weekData, index) => {
-      totals[index].impressions += weekData?.impressions || 0;
-      totals[index].clicks += weekData?.clicks || 0;
-      totals[index].adCost += weekData?.adCost || 0;
-      totals[index].conversion += weekData?.conversion || 0;
-      totals[index].conversionRevenue += weekData?.conversionRevenue || 0;
+    writeNoSearchData(worksheet, record, rowIndex, reportType);
+    record[reportType].forEach((data, index) => {
+      totals[index].impressions += data?.impressions || 0;
+      totals[index].clicks += data?.clicks || 0;
+      totals[index].adCost += data?.adCost || 0;
+      totals[index].conversion += data?.conversion || 0;
+      totals[index].conversionRevenue += data?.conversionRevenue || 0;
     });
     rowIndex++;
   });

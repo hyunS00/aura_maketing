@@ -6,12 +6,13 @@ const _ = require("lodash");
  * @param {string} key - 정렬 기준 키
  * @returns {Array} - TOP10 데이터 배열
  */
-const getTop10Data = (data, key) => {
+const getTop10Data = (data, key, reportType) => {
   return _(data)
     .filter(
-      (item) => _.has(item.weeks[1], key) && _.isNumber(item.weeks[1][key])
+      (item) =>
+        _.has(item[reportType][1], key) && _.isNumber(item[reportType][1][key])
     )
-    .orderBy(["weeks[1]." + key], ["desc"])
+    .orderBy([`${reportType}[1].` + key], ["desc"])
     .take(10)
     .value();
 };

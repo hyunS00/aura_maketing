@@ -7,10 +7,8 @@ const reportConfig = require("../../config/reportConfig.js");
  * @returns {Object,Object} - 워크시트, 속성 매핑 객체
  */
 const handleCoupang = async (filePaths) => {
-  const worksheets = { preve: null, current: null };
-  const attributeMaps = { preve: new Map(), current: new Map() };
-  console.log("filepaths:", filePaths);
-
+  const worksheets = { prev: null, current: null };
+  const attributeMaps = { prev: new Map(), current: new Map() };
   try {
     for (const key of Object.keys(filePaths)) {
       const filePath = filePaths[key];

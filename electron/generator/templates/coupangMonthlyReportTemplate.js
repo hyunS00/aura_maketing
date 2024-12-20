@@ -1,9 +1,9 @@
 const writeSummarySheet = require("../sheets/summary/summarySheet.js");
-const writeDayOfWeekSheet = require("../sheets/dayOfWeek/dayOfWeekSheet.js");
+const writeWeekOfMonthSheet = require("../sheets/weekOfMonth/weekOfMonthSheet.js");
 const writeCampaignSheet = require("../sheets/campaign/campaignSheet.js");
 const writeNoSearchSheet = require("../sheets/noSearch/noSearchSheet.js");
 
-const writeCoupangWeeklyReportTemplate = (
+const writeCoupangMonthlyReportTemplate = (
   workbook,
   data,
   code,
@@ -15,22 +15,27 @@ const writeCoupangWeeklyReportTemplate = (
     code,
     companyName,
     "coupang",
-    "weekly"
+    "monthly"
   ); // 2행부터 작성
-  writeDayOfWeekSheet(workbook.sheet("요일"), data.byDay, "coupang", "weekly");
+  writeWeekOfMonthSheet(
+    workbook.sheet("주차"),
+    data.byWeek,
+    "coupang",
+    "monthly"
+  );
   writeCampaignSheet(
     workbook.sheet("캠페인"),
-    data.byWeek,
+    data.byMonth,
     62,
     "coupang",
-    "weekly"
+    "monthly"
   );
   writeNoSearchSheet(
     workbook.sheet("비검색영역"),
     data.byNoSearch,
-    "weekly",
+    "monthly",
     6
   );
 };
 
-module.exports = writeCoupangWeeklyReportTemplate;
+module.exports = writeCoupangMonthlyReportTemplate;

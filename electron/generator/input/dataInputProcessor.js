@@ -30,7 +30,7 @@ const processInput = async (platform, reportType, format, filePaths) => {
   const handler = formatHandlers[platform.toLowerCase()];
 
   if (!handler) {
-    throw new Error(`지원되지 않는 데이터 포맷: ${format}`);
+    throw new Error(`지원되지 않는 데이터 포맷: ${platform}`);
   }
 
   // 플랫폼 및 보고서 유형에 따른 설정 가져오기
@@ -46,7 +46,6 @@ const processInput = async (platform, reportType, format, filePaths) => {
     const { worksheets, attributeMaps } = await handler(filePaths);
 
     const data = readWorksheetData(worksheets, attributeMaps, lowerPlatform);
-    console.log(data);
 
     console.log(`파일 ${filePaths?.prev}의 데이터 처리 성공.`);
     console.log(`파일 ${filePaths?.current}의 데이터 처리 성공.`);
@@ -68,7 +67,6 @@ const readWorksheetData = (worksheets, attributeMaps, platform, reportType) => {
   const data = [];
   for (const key of Object.keys(worksheets)) {
     const worksheet = worksheets[key];
-    console.log("key", key);
 
     if (worksheet) {
       const attributeMap = attributeMaps[key];

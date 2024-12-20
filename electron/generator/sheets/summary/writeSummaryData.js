@@ -18,11 +18,11 @@ const writeCell = (worksheet, column, row, value) => {
  * @param {string} type - 데이터 타입 ("자동" 또는 "수동")
  * @param {string} platform - 플랫폼 이름 ("coupang" 또는 "naver")
  */
-const writeSummaryData = (worksheet, data, type, platform) => {
+const writeSummaryData = (worksheet, data, type, platform, reportType) => {
   try {
     const {
       [platform]: {
-        weekly: {
+        [reportType]: {
           mappings: {
             summarySheet: {
               summaryDataColumns,
@@ -35,12 +35,12 @@ const writeSummaryData = (worksheet, data, type, platform) => {
       },
     } = reportConfig;
 
-    const weeks = [
+    const weekly = [
       { index: currentWeekRowIndex[type], data: data[1] }, // 현재 주
       { index: previousWeekRowIndex[type], data: data[0] }, // 전주
     ];
 
-    weeks.forEach(({ index, data: weekData }) => {
+    weekly.forEach(({ index, data: weekData }) => {
       summaryDataColumns.forEach((column, colIndex) => {
         const key = summaryDataKeys[colIndex];
         const value = weekData[key] !== undefined ? weekData[key] : 0;
