@@ -10,6 +10,8 @@ const reportConfig = require("../../config/reportConfig.js");
 const writeSummarySheet = (
   worksheet,
   data,
+  startDate,
+  endDate,
   code,
   companyName,
   platform,
@@ -22,8 +24,7 @@ const writeSummarySheet = (
   } = reportConfig;
   worksheet.cell("C7").value(code);
   worksheet.cell("C8").value(companyName);
-  console.log(type);
-  console.log(data);
+  worksheet.cell("C9").value(`${startDate} - ${endDate}`);
 
   type.forEach((typeValue) => {
     writeSummaryData(

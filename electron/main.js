@@ -1,6 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog, shell } = require("electron");
 const path = require("node:path");
 const Generator = require("./generator/generator.js");
+const { platform } = require("node:os");
 
 function createWindow() {
   console.log("path: ", path.resolve(__dirname, "preload.js"));
@@ -60,6 +61,16 @@ ipcMain.handle("upload-file", async () => {
   }
 });
 
+const config = {
+  platform: {
+    coupang: "쿠팡",
+    naver: "네이버",
+  },
+  type: {
+    weekly: "주간",
+    monthly: "월간",
+  },
+};
 ipcMain.handle(
   "generate-report",
   async (event, { filePaths, code, name, platform, type }) => {
@@ -79,7 +90,7 @@ ipcMain.handle(
         {
           defaultPath: path.join(
             app.getPath("downloads"),
-            `${name}_report.xlsx`
+            `${name} ${config.platform[platform]} ${config.type[type]} 광고성과 보고서.xlsx`
           ),
           buttonLabel: "저장",
         }

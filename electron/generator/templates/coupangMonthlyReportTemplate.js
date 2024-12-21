@@ -12,6 +12,8 @@ const writeCoupangMonthlyReportTemplate = (
   writeSummarySheet(
     workbook.sheet("요약"),
     data.byType,
+    data.startDate,
+    data.endDate,
     code,
     companyName,
     "coupang",
