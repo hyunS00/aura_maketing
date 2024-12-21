@@ -45,7 +45,7 @@ const writeCampaignSheet = (
   // TOP10 데이터 작성
   writeCampaignTop10Data(worksheet, data, reportType);
 
-  autoFitColumns(worksheet, ["C", "E", "G", "M", "Q", "S", "U"]);
+  autoFitColumns(worksheet, "C:V");
   console.log("캠페인 시트 작성 완료!");
 };
 

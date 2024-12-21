@@ -395,7 +395,7 @@ const aggregateDataByTypeAndMonth = (data) => {
   const previousMonth = currentMonth === 1 ? 12 : currentMonth - 1;
   const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
 
-  const relevantMonthly = [`${previousMonth}월`, `${nextMonth}월`];
+  const relevantMonthly = [`${previousMonth}월`, `${currentMonth}월`];
 
   data.forEach((entry) => {
     const {

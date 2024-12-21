@@ -27,23 +27,7 @@ const writeNoSearchSheet = (worksheet, data, reportType, offset = 6) => {
   });
   // 합계 데이터 작성
   writeSummaryRow(worksheet, 5, totals);
-  autoFitColumns(worksheet, [
-    "C",
-    "D",
-    "E",
-    "F",
-    "G",
-    "H",
-    "M",
-    "N",
-    "O",
-    "P",
-    "Q",
-    "R",
-    "S",
-    "T",
-    "U",
-  ]);
+  autoFitColumns(worksheet, "C:V");
   console.log("캠페인 시트 작성 완료!");
 };
 

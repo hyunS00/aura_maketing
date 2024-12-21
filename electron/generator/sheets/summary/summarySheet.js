@@ -22,6 +22,8 @@ const writeSummarySheet = (
   } = reportConfig;
   worksheet.cell("C7").value(code);
   worksheet.cell("C8").value(companyName);
+  console.log(type);
+  console.log(data);
 
   type.forEach((typeValue) => {
     writeSummaryData(

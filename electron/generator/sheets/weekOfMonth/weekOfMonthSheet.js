@@ -31,7 +31,7 @@ const writeWeekOfMonthSheet = (worksheet, data, platform, reportType) => {
       reportType
     );
   });
-  autoFitColumns(worksheet, ["Q", "U"]);
+  autoFitColumns(worksheet, "B:Z");
 };
 
 module.exports = writeWeekOfMonthSheet;

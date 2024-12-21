@@ -97,12 +97,13 @@ const readWorksheetData = (worksheets, attributeMaps, platform, reportType) => {
 
         if (!campaign) continue;
 
-        let type = "기타";
+        let type = "수동";
         if (campaign.includes("자동")) {
           type = "자동";
-        } else if (campaign.includes("수동")) {
-          type = "수동";
         }
+        // else if (campaign.includes("수동")) {
+        //   type = "수동";
+        // }
 
         data.push({
           campaign,
