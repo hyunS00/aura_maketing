@@ -57,7 +57,7 @@ ipcMain.handle("upload-file", async () => {
     return result.filePaths[0];
   } catch (error) {
     console.error("파일 업로드 오류", error);
-    throw error;
+    dialog.showErrorBox("파일 업로드 오류", `${error}`);
   }
 });
 
@@ -104,7 +104,7 @@ ipcMain.handle(
       return result;
     } catch (error) {
       console.error("보고서 생성 오류:", error);
-      throw error;
+      dialog.showErrorBox("보고서 생성 오류", `${error}`);
     }
   }
 );

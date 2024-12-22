@@ -1,18 +1,12 @@
 const {
-  compareAsc,
-  addDays,
-  isBefore,
-  isSameDay,
-  parse,
-  startOfWeek,
-  endOfWeek,
-  differenceInCalendarDays,
-  min,
-  startOfDay,
-  addHours,
-} = require("date-fns");
-const { toZonedTime } = require("date-fns-tz");
-
+  LocalDate,
+  ZonedDateTime,
+  ZoneId,
+  ChronoUnit,
+  DateTimeFormatter,
+  DayOfWeek,
+} = require("@js-joda/core");
+require("@js-joda/timezone");
 const {
   aggregateBy,
   aggregateDataByCampaignAndWeek,
@@ -21,6 +15,32 @@ const {
   aggregateDataByTypeAndMonth,
   aggregateDataByCampaignAndMonth,
 } = require("./dataAggregator.js");
+/**
+ * previousOrSame 함수 구현
+ * @param {LocalDate} date - 기준 날짜
+ * @param {DayOfWeek} dayOfWeek - 목표 요일
+ * @returns {LocalDate} - 목표 요일 또는 이전 날짜
+ */
+function previousOrSame(date, dayOfWeek) {
+  while (date.dayOfWeek() !== dayOfWeek) {
+    date = date.minusDays(1);
+  }
+  return date;
+}
+
+/**
+ * nextOrSame 함수 구현
+ * @param {LocalDate} date - 기준 날짜
+ * @param {DayOfWeek} dayOfWeek - 목표 요일
+ * @returns {LocalDate} - 목표 요일 또는 이후 날짜
+ */
+function nextOrSame(date, dayOfWeek) {
+  while (date.dayOfWeek() !== dayOfWeek) {
+    date = date.plusDays(1);
+  }
+  return date;
+}
+
 /**
  * ETL 프로세스를 처리하는 클래스
  */
@@ -45,7 +65,7 @@ class ETLProcess {
       console.log("ETL 프로세스 시작");
 
       // 1. 데이터 검증
-      //   this.validateData(rawData);
+      this.validateData(rawData);
 
       // 2. 데이터 변환 및 집계
       const processedData = this.transformData(rawData);
@@ -119,17 +139,17 @@ class ETLProcess {
     } else if (this.reportType === "monthly") {
       // 1. 최근 월 식별
       const latestDate = parsedData.reduce((max, entry) => {
-        return entry.actualDate > max ? entry.actualDate : max;
+        return entry.actualDate.isAfter(max) ? entry.actualDate : max;
       }, parsedData[0].actualDate);
 
-      const latestYear = latestDate.getFullYear();
-      const latestMonth = latestDate.getMonth(); // 0 기반
+      const latestYear = latestDate.year();
+      const latestMonth = latestDate.monthValue(); // 1 기반
 
       // 2. 최근 월 데이터 필터링
       const latestMonthData = parsedData.filter(
         (entry) =>
-          entry.actualDate.getFullYear() === latestYear &&
-          entry.actualDate.getMonth() === latestMonth
+          entry.actualDate.year() === latestYear &&
+          entry.actualDate.monthValue() === latestMonth
       );
 
       // 3. 주차 번호 할당
@@ -169,45 +189,34 @@ class ETLProcess {
   }
 
   /**
-   * 날짜 문자열을 한국 시계 기준 Date 객체로 변환
+   * 날짜 문자열을 한국 시계 기준 ZonedDateTime 객체로 변환
    * @param {string} dayStr - 날짜 문자열 (예: '24.11.04')
-   * @returns {Date} - 변환된 Date 객체
+   * @returns {ZonedDateTime} - 변환된 ZonedDateTime 객체
    */
   parseDate(dayStr) {
     try {
-      const [year, month, day] = dayStr
-        .split(".")
-        .map((num) => parseInt(num, 10));
-      const fullYear = year < 100 ? 2000 + year : year;
-      // UTC 기준으로 날짜를 생성
-      const utcDate = new Date(Date.UTC(fullYear, month - 1, day));
-      if (isNaN(utcDate)) {
-        throw new Error(`Invalid date string: ${dayStr}`);
-      }
-      // UTC 날짜를 Asia/Seoul 시간대로 변환
-      const zonedDate = toZonedTime(utcDate, "Asia/Seoul");
-      return zonedDate;
+      const formatter = DateTimeFormatter.ofPattern("yy.MM.dd");
+      let localDate = LocalDate.parse(dayStr, formatter);
+      let zonedDateTime = localDate.atStartOfDay(ZoneId.of("Asia/Seoul"));
+      return zonedDateTime;
     } catch (error) {
       console.error(`Error parsing date: ${error.message}`);
-      return null; // 또는 적절한 기본값 반환
+      return null;
     }
   }
 
   /**
-   * Date 객체를 "YY.MM.DD" 형식의 문자열로 변환
-   * @param {Date} date - 변환할 Date 객체
+   * ZonedDateTime 또는 LocalDate 객체를 "YY.MM.DD" 형식의 문자열로 변환
+   * @param {ZonedDateTime | LocalDate} date - 변환할 날짜 객체
    * @returns {string} - 포맷팅된 날짜 문자열 (예: "24.11.10")
    */
   formatDate(date) {
-    if (!(date instanceof Date) || isNaN(date)) {
-      throw new Error("유효하지 않은 Date 객체");
+    if (!(date instanceof ZonedDateTime) && !(date instanceof LocalDate)) {
+      throw new Error("유효하지 않은 날짜 객체");
     }
 
-    const year = (date.getFullYear() % 100).toLocaleString().padStart(2, "0");
-    const month = (date.getMonth() + 1).toLocaleString().padStart(2, "0"); // 월은 0 기반이므로 +1
-    const day = date.getDate().toLocaleString().padStart(2, "0");
-
-    return `${year}.${month}.${day}`;
+    const formatter = DateTimeFormatter.ofPattern("yy.MM.dd");
+    return date.format(formatter);
   }
 
   /**
@@ -218,9 +227,9 @@ class ETLProcess {
   getStartDate(data) {
     if (data.length === 0) return null;
     const startDate = data.reduce((min, entry) => {
-      return entry.actualDate < min ? entry.actualDate : min;
+      return entry.actualDate.isBefore(min) ? entry.actualDate : min;
     }, data[0].actualDate);
-    return this.formatDate(startDate); // 형식화된 문자열 반환
+    return this.formatDate(startDate.toLocalDate());
   }
 
   /**
@@ -231,9 +240,9 @@ class ETLProcess {
   getEndDate(data) {
     if (data.length === 0) return null;
     const endDate = data.reduce((max, entry) => {
-      return entry.actualDate > max ? entry.actualDate : max;
+      return entry.actualDate.isAfter(max) ? entry.actualDate : max;
     }, data[0].actualDate);
-    return this.formatDate(endDate); // 형식화된 문자열 반환
+    return this.formatDate(endDate.toLocalDate());
   }
 
   /**
@@ -247,43 +256,59 @@ class ETLProcess {
   assignWeekNumbers(data, type = "weekly") {
     if (data.length === 0) return data;
     const sortedData = data.sort((a, b) =>
-      compareAsc(a.actualDate, b.actualDate)
+      a.actualDate.compareTo(b.actualDate)
     );
     if (type === "monthly") {
-      const firstDate = sortedData[0].actualDate;
-      const krDate = addHours(firstDate, 9);
+      const firstDate = sortedData[0].actualDate.toLocalDate();
 
-      const year = krDate.getFullYear();
-      const month = krDate.getMonth();
-      console.log("y:", year, "m:", month);
+      const year = firstDate.year();
+      const month = firstDate.monthValue();
 
       // 월의 첫 날과 마지막 날을 Asia/Seoul 시간대로 설정
-      const firstOfMonth = new Date(year, month, 1);
-      const lastOfMonth = new Date(year, month + 1, 0);
+      const firstOfMonth = LocalDate.of(year, month, 1);
+      const firstOfMonthZoned = firstOfMonth.atStartOfDay(
+        ZoneId.of("Asia/Seoul")
+      );
+      const lastOfMonth = firstOfMonthZoned
+        .toLocalDate()
+        .withDayOfMonth(firstOfMonthZoned.toLocalDate().lengthOfMonth());
+      const lastOfMonthZoned = lastOfMonth.atStartOfDay(
+        ZoneId.of("Asia/Seoul")
+      );
+
       let weekNumber = 1;
       const weekRanges = [];
-      // 첫 주의 시작일을 월요일로 설정, 필요시 월의 첫 날로 조정
-      let currentWeekStart = startOfWeek(firstOfMonth, { weekStartsOn: 1 });
-      while (currentWeekStart <= lastOfMonth) {
-        let currentWeekEnd = endOfWeek(currentWeekStart, { weekStartsOn: 1 });
-        currentWeekEnd = min([currentWeekEnd, lastOfMonth]);
-        currentWeekEnd = startOfDay(currentWeekEnd); // 시간 정규화
-        // 이미 Asia/Seoul 시간대로 설정된 상태이므로 추가 변환 제거
+      // 첫 주의 시작일을 월요일으로 설정, 필요시 월의 첫 날로 조정
+      let currentWeekStart = previousOrSame(firstOfMonth, DayOfWeek.MONDAY);
+      if (currentWeekStart.isBefore(firstOfMonth)) {
+        currentWeekStart = firstOfMonth;
+      }
+      currentWeekStart = currentWeekStart.atStartOfDay(ZoneId.of("Asia/Seoul"));
+
+      while (!currentWeekStart.toLocalDate().isAfter(lastOfMonth)) {
+        let currentWeekEnd = nextOrSame(
+          currentWeekStart.toLocalDate(),
+          DayOfWeek.SUNDAY
+        ).atStartOfDay(ZoneId.of("Asia/Seoul"));
+        if (currentWeekEnd.toLocalDate().isAfter(lastOfMonth)) {
+          currentWeekEnd = lastOfMonthZoned;
+        }
         weekRanges.push({
           weekNumber: weekNumber,
-          weekStart: currentWeekStart,
-          weekEnd: currentWeekEnd,
+          weekStart: currentWeekStart.toLocalDate(),
+          weekEnd: currentWeekEnd.toLocalDate(),
         });
         weekNumber += 1;
-        currentWeekStart = addDays(currentWeekEnd, 1);
+        currentWeekStart = currentWeekEnd.plusDays(1);
       }
+
       // 주차 할당 최적화: weekRanges를 순회하며 매칭
       let rangeIndex = 0;
       return sortedData.map((entry) => {
-        const entryDate = entry.actualDate;
+        const entryDate = entry.actualDate.toLocalDate();
         while (
           rangeIndex < weekRanges.length &&
-          entryDate > weekRanges[rangeIndex].weekEnd
+          entryDate.isAfter(weekRanges[rangeIndex].weekEnd)
         ) {
           rangeIndex++;
         }
@@ -305,13 +330,13 @@ class ETLProcess {
         };
       });
     } else {
-      // 기존의 주간 보고서용 주차 할당 로직
-      const startDate = sortedData[0].actualDate;
+      // 기존의 주간 보고서용 주차 할당 로직 (js-joda로 변환)
+      const startDate = sortedData[0].actualDate.toLocalDate();
       const weekly = ["1주차", "2주차", "3주차", "4주차", "5주차"];
       return sortedData.map((entry) => {
-        const diffInDays = differenceInCalendarDays(
-          entry.actualDate,
-          startDate
+        const diffInDays = ChronoUnit.DAYS.between(
+          startDate,
+          entry.actualDate.toLocalDate()
         );
         const weekNumber = Math.min(
           Math.floor(diffInDays / 7) + 1,
@@ -333,17 +358,24 @@ class ETLProcess {
 
     // 날짜를 오름차순으로 정렬
     const sortedData = data.sort((a, b) =>
-      compareAsc(a.actualDate, b.actualDate)
+      a.actualDate.compareTo(b.actualDate)
     );
 
     // 첫 번째 데이터의 월을 기준으로 이전 월과 현재 월 설정
-    const firstDate = sortedData[0].actualDate;
+    const firstDate = sortedData[0].actualDate.toLocalDate();
+    const referenceMonth = firstDate.monthValue();
 
     return sortedData.map((entry) => {
-      const entryDate = entry.actualDate;
-      const entryMonth = entryDate.getMonth() + 1;
-
-      return { ...entry, month: `${entryMonth}월` };
+      const entryMonth = entry.actualDate.toLocalDate().monthValue();
+      let monthLabel = "";
+      if (entryMonth < referenceMonth) {
+        monthLabel = `${entryMonth}월 (이전월)`;
+      } else if (entryMonth === referenceMonth) {
+        monthLabel = `${entryMonth}월 (현재월)`;
+      } else {
+        monthLabel = `${entryMonth}월`;
+      }
+      return { ...entry, month: monthLabel };
     });
   }
 
@@ -355,7 +387,7 @@ class ETLProcess {
   calculateSummary(data) {
     const summary = data.reduce(
       (acc, item) => {
-        acc.impressions += item.impressions || 0;
+        acc.totalImpressions += item.impressions || 0;
         acc.clicks += item.clicks || 0;
         acc.adCost += item.adCost || 0;
         acc.conversion += item.conversion || 0;
@@ -372,8 +404,8 @@ class ETLProcess {
     );
 
     summary.ctr =
-      summary.impressions > 0
-        ? (summary.clicks / summary.impressions) * 100
+      summary.totalImpressions > 0
+        ? (summary.clicks / summary.totalImpressions) * 100
         : 0;
     summary.conversionRate =
       summary.clicks > 0 ? (summary.conversion / summary.clicks) * 100 : 0;
