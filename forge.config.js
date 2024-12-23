@@ -16,12 +16,12 @@ module.exports = {
       name: "@electron-forge/maker-zip",
       platforms: ["darwin"],
     },
-    {
-      name: "@electron-forge/maker-dmg",
-      config: {
-        overwrite: true,
-      },
-    },
+    // {
+    //   name: "@electron-forge/maker-dmg",
+    //   config: {
+    //     overwrite: true,
+    //   },
+    // },
     {
       name: "@electron-forge/maker-deb",
       config: {},

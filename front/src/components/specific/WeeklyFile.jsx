@@ -6,7 +6,7 @@ const WeeklyFile = ({ filePaths, setFilePaths }) => {
     console.log("업로드 파일 클릭");
 
     const filePath = await window.electronAPI.uploadFile();
-    console.log(filePath);
+
     setFilePaths((pre) => ({
       ...pre,
       current: filePath,
