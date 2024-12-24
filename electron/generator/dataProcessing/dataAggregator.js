@@ -24,6 +24,10 @@ const aggregateBy = (data, keys, descending = true) => {
           {}
         ),
         day: item.day || "Unknown",
+        weekStart: item.weekStart || "Unknown",
+        weekEnd: item.weekEnd || "Unknown",
+        month: item.month || "Unkwon",
+        numberOfDays: item.numberOfDays || "Unknown",
         type: item.type || "Unknown",
         impressions: 0,
         clicks: 0,

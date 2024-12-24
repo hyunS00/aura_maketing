@@ -10,7 +10,6 @@ const autoFitColumns = require("../../utils/autoFit.js");
  */
 const writeWeekOfMonthSheet = (worksheet, data, platform, reportType) => {
   const typeData = groupBy(data, "type");
-  console.log(typeData);
 
   const {
     [platform]: {

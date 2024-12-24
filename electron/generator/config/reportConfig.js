@@ -48,8 +48,8 @@ const reportConfig = {
       sheet: ["요약", "주차", "캠페인", "비검색영역"],
       mappings: {
         daySheet: {
-          dayDataColumns: ["Q", "R", "U", "V", "X"],
-          typeRowIndex: { 자동: 5, 수동: 14 },
+          dayDataColumns: ["Q", "R", "U", "V", "X", "O", "P"],
+          typeRowIndex: { 자동: 5, 수동: 15 },
         },
         summarySheet: {
           summaryDataColumns: ["D", "E", "H", "J", "M"],

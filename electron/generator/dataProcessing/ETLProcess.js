@@ -157,6 +157,7 @@ class ETLProcess {
         latestMonthData,
         "monthly"
       );
+      console.log("주차:", assignedWeekData);
 
       const assignedMonthData = this.assignMonthNumbers(parsedData);
 
@@ -180,7 +181,7 @@ class ETLProcess {
     } else {
       throw new Error(`Unsupported reportType: ${this.reportType}`);
     }
-    console.log("type", aggregatedData.byType);
+    console.log("byWeek", aggregatedData.byWeek);
 
     console.log("시작일:", aggregatedData.startDate);
     console.log("종료일:", aggregatedData.endDate);
@@ -216,6 +217,20 @@ class ETLProcess {
     }
 
     const formatter = DateTimeFormatter.ofPattern("yy.MM.dd");
+    return date.format(formatter);
+  }
+
+  /**
+   * 'day' 정보를 추출하는 유틸리티 함수 추가
+   * @param {ZonedDateTime | LocalDate} date - 변환할 날짜 객체
+   * @returns {string} - 'dd' 형식의 문자열 (예: "10")
+   */
+  formatDay(date) {
+    if (!(date instanceof ZonedDateTime) && !(date instanceof LocalDate)) {
+      throw new Error("유효하지 않은 날짜 객체");
+    }
+
+    const formatter = DateTimeFormatter.ofPattern("d일");
     return date.format(formatter);
   }
 
@@ -297,6 +312,11 @@ class ETLProcess {
           weekNumber: weekNumber,
           weekStart: currentWeekStart.toLocalDate(),
           weekEnd: currentWeekEnd.toLocalDate(),
+          numberOfDays:
+            ChronoUnit.DAYS.between(
+              currentWeekStart.toLocalDate(),
+              currentWeekEnd.toLocalDate()
+            ) + 1,
         });
         weekNumber += 1;
         currentWeekStart = currentWeekEnd.plusDays(1);
@@ -325,12 +345,13 @@ class ETLProcess {
         return {
           ...entry,
           week: `${weekInfo.weekNumber}주차`,
-          weekStart: this.formatDate(weekInfo.weekStart),
-          weekEnd: this.formatDate(weekInfo.weekEnd),
+          month: `${month}월`,
+          weekStart: this.formatDay(weekInfo.weekStart),
+          weekEnd: this.formatDay(weekInfo.weekEnd),
+          numberOfDays: weekInfo.numberOfDays,
         };
       });
     } else {
-      // 기존의 주간 보고서용 주차 할당 로직 (js-joda로 변환)
       const startDate = sortedData[0].actualDate.toLocalDate();
       const weekly = ["1주차", "2주차", "3주차", "4주차", "5주차"];
       return sortedData.map((entry) => {
