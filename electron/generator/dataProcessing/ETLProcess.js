@@ -157,7 +157,6 @@ class ETLProcess {
         latestMonthData,
         "monthly"
       );
-      console.log("주차:", assignedWeekData);
 
       const assignedMonthData = this.assignMonthNumbers(parsedData);
 
@@ -181,7 +180,6 @@ class ETLProcess {
     } else {
       throw new Error(`Unsupported reportType: ${this.reportType}`);
     }
-    console.log("byWeek", aggregatedData.byWeek);
 
     console.log("시작일:", aggregatedData.startDate);
     console.log("종료일:", aggregatedData.endDate);
@@ -385,18 +383,11 @@ class ETLProcess {
     // 첫 번째 데이터의 월을 기준으로 이전 월과 현재 월 설정
     const firstDate = sortedData[0].actualDate.toLocalDate();
     const referenceMonth = firstDate.monthValue();
+    console.log("referenceMonth", referenceMonth);
 
     return sortedData.map((entry) => {
       const entryMonth = entry.actualDate.toLocalDate().monthValue();
-      let monthLabel = "";
-      if (entryMonth < referenceMonth) {
-        monthLabel = `${entryMonth}월 (이전월)`;
-      } else if (entryMonth === referenceMonth) {
-        monthLabel = `${entryMonth}월 (현재월)`;
-      } else {
-        monthLabel = `${entryMonth}월`;
-      }
-      return { ...entry, month: monthLabel };
+      return { ...entry, month: `${entryMonth}월` };
     });
   }
 
