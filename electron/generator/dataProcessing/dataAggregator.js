@@ -189,6 +189,8 @@ const aggregateDataByTypeAndWeek = (data) => {
     const {
       type,
       week,
+      startDate,
+      endDate,
       impressions,
       clicks,
       adCost,
@@ -208,6 +210,8 @@ const aggregateDataByTypeAndWeek = (data) => {
     if (!summaryByType[type].weekly[week]) {
       summaryByType[type].weekly[week] = {
         week,
+        startDate,
+        endDate,
         impressions: 0,
         clicks: 0,
         adCost: 0,
@@ -405,6 +409,8 @@ const aggregateDataByTypeAndMonth = (data) => {
     const {
       type,
       month,
+      startDate,
+      endDate,
       impressions,
       clicks,
       adCost,
@@ -427,6 +433,8 @@ const aggregateDataByTypeAndMonth = (data) => {
     if (!summaryByType[type].monthly[month]) {
       summaryByType[type].monthly[month] = {
         month,
+        startDate,
+        endDate,
         impressions: 0,
         clicks: 0,
         adCost: 0,

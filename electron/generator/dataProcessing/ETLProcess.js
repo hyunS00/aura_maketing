@@ -181,9 +181,6 @@ class ETLProcess {
       throw new Error(`Unsupported reportType: ${this.reportType}`);
     }
 
-    console.log("시작일:", aggregatedData.startDate);
-    console.log("종료일:", aggregatedData.endDate);
-
     return aggregatedData;
   }
 
@@ -229,6 +226,22 @@ class ETLProcess {
     }
 
     const formatter = DateTimeFormatter.ofPattern("d일");
+    return date.format(formatter);
+  }
+
+  /**
+   * 주어진 날짜 객체를 "MM.dd" 형식의 문자열로 변환합니다.
+   *
+   * @param {ZonedDateTime | LocalDate} date - 변환할 날짜 객체
+   * @returns {string} 포맷팅된 날짜 문자열 (예: "11.10")
+   * @throws {Error} 유효하지 않은 날짜 객체인 경우 발생
+   */
+  formatMonthDay(date) {
+    if (!(date instanceof ZonedDateTime) && !(date instanceof LocalDate)) {
+      throw new Error("유효하지 않은 날짜 객체");
+    }
+
+    const formatter = DateTimeFormatter.ofPattern("MM.dd");
     return date.format(formatter);
   }
 
@@ -352,25 +365,52 @@ class ETLProcess {
     } else {
       const startDate = sortedData[0].actualDate.toLocalDate();
       const weekly = ["1주차", "2주차", "3주차", "4주차", "5주차"];
+
+      // 주차별 시작일과 종료일 계산
+      const weekRanges = weekly.map((weekLabel, index) => {
+        const weekStartDate = startDate.plusDays(index * 7);
+        const weekEndDate = weekStartDate.plusDays(6);
+        return {
+          weekLabel,
+          startDate: weekStartDate,
+          endDate: weekEndDate,
+        };
+      });
+
       return sortedData.map((entry) => {
-        const diffInDays = ChronoUnit.DAYS.between(
-          startDate,
-          entry.actualDate.toLocalDate()
+        const entryDate = entry.actualDate.toLocalDate();
+        const weekRange = weekRanges.find(
+          (range) =>
+            (entryDate.isEqual(range.startDate) ||
+              entryDate.isAfter(range.startDate)) &&
+            (entryDate.isEqual(range.endDate) ||
+              entryDate.isBefore(range.endDate))
         );
-        const weekNumber = Math.min(
-          Math.floor(diffInDays / 7) + 1,
-          weekly.length
-        );
-        return { ...entry, week: weekly[weekNumber - 1] };
+
+        if (weekRange) {
+          return {
+            ...entry,
+            week: weekRange.weekLabel,
+            startDate: this.formatMonthDay(weekRange.startDate),
+            endDate: this.formatMonthDay(weekRange.endDate),
+          };
+        } else {
+          console.warn(`주차 정보를 찾을 수 없음: ${entryDate}`);
+          return {
+            ...entry,
+            week: "주차 정보 없음",
+            startDate: null,
+            endDate: null,
+          };
+        }
       });
     }
   }
 
   /**
-   * assignMonthNumbers 함수는 주어진 데이터에 월 번호를 할당합니다.
-   * 이전 월과 현재 월을 기준으로 각 항목에 대해 '이전월', '현재월', '기타'로 월을 지정합니다.
-   * @param {Array} data - 월 번호를 할당할 데이터 배열
-   * @returns {Array} 월 번호가 할당된 데이터 배열
+   * assignMonthNumbers 함수는 주어진 데이터에 월 번호, 월의 시작일 및 종료일을 할당합니다.
+   * @param {Array} data - 월 번호와 월의 시작일 및 종료일을 할당할 데이터 배열
+   * @returns {Array} 월 번호와 월의 시작일, 종료일이 할당된 데이터 배열
    */
   assignMonthNumbers(data) {
     if (data.length === 0) return data;
@@ -383,11 +423,39 @@ class ETLProcess {
     // 첫 번째 데이터의 월을 기준으로 이전 월과 현재 월 설정
     const firstDate = sortedData[0].actualDate.toLocalDate();
     const referenceMonth = firstDate.monthValue();
-    console.log("referenceMonth", referenceMonth);
 
     return sortedData.map((entry) => {
-      const entryMonth = entry.actualDate.toLocalDate().monthValue();
-      return { ...entry, month: `${entryMonth}월` };
+      const entryDate = entry.actualDate.toLocalDate();
+      const entryMonth = entryDate.monthValue();
+
+      // 해당 월의 첫 날과 마지막 날 계산
+      const firstOfMonth = LocalDate.of(entryDate.year(), entryMonth, 1);
+      const lastOfMonth = firstOfMonth.withDayOfMonth(
+        firstOfMonth.lengthOfMonth()
+      );
+
+      // ZonedDateTime으로 변환
+      const firstOfMonthZoned = firstOfMonth.atStartOfDay(
+        ZoneId.of("Asia/Seoul")
+      );
+      const lastOfMonthZoned = lastOfMonth.atStartOfDay(
+        ZoneId.of("Asia/Seoul")
+      );
+
+      // 날짜 형식화
+      const formattedMonthStart = this.formatMonthDay(
+        firstOfMonthZoned.toLocalDate()
+      );
+      const formattedMonthEnd = this.formatMonthDay(
+        lastOfMonthZoned.toLocalDate()
+      );
+
+      return {
+        ...entry,
+        month: `${entryMonth}월`,
+        startDate: formattedMonthStart,
+        endDate: formattedMonthEnd,
+      };
     });
   }
 

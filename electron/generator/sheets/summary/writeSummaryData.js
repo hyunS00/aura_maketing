@@ -48,6 +48,11 @@ const writeSummaryData = (worksheet, data, type, platform, reportType) => {
         writeCell(worksheet, column, index, value);
       });
     });
+    weekly.forEach(({ index, data: weekData }) => {
+      worksheet
+        .cell(`B${index}`)
+        .value(`${weekData.startDate}-${weekData.endDate} ${type}캠페인 합계`);
+    });
   } catch (error) {
     console.error("요약 데이터 작성 중 오류 발생:", error);
   }
