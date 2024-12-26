@@ -39,7 +39,6 @@ const writeSummaryData = (worksheet, data, type, platform, reportType) => {
       { index: currentWeekRowIndex[type], data: data[1] }, // 현재 주
       { index: previousWeekRowIndex[type], data: data[0] }, // 전주
     ];
-    console.log("summary", weekly);
 
     weekly.forEach(({ index, data: weekData }) => {
       summaryDataColumns.forEach((column, colIndex) => {

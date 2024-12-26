@@ -162,6 +162,7 @@ class ETLProcess {
 
       // 4. 데이터 집계
       const groupByedTypeData = aggregateDataByTypeAndMonth(assignedMonthData);
+      console.log(groupByedTypeData["수동"][0]);
 
       const groupByedCampaignData =
         aggregateDataByCampaignAndMonth(assignedMonthData);

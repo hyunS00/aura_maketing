@@ -75,7 +75,7 @@ ipcMain.handle(
   "generate-report",
   async (event, { filePaths, code, name, platform, type }) => {
     try {
-      console.log(code, name, platform, type);
+      code, name, platform, type;
       const generator = new Generator();
       const workbook = await generator.generateReport(
         filePaths,

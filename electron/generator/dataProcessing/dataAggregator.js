@@ -398,8 +398,13 @@ const aggregateDataByNoSearch = (data) => {
 const aggregateDataByTypeAndMonth = (data) => {
   const summaryByType = {};
 
-  const currentDate = new Date();
-  const currentMonth = currentDate.getMonth() + 1; // 월은 0부터 시작하므로 +1
+  // 데이터 내의 모든 날짜 추출
+  const dates = data.flatMap((entry) => [
+    new Date(entry.startDate),
+    new Date(entry.endDate),
+  ]);
+  const latestDate = new Date(Math.max.apply(null, dates));
+  const currentMonth = latestDate.getMonth() + 1; // 월은 0부터 시작하므로 +1
   const previousMonth = currentMonth === 1 ? 12 : currentMonth - 1;
   const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
 
@@ -519,9 +524,15 @@ const aggregateDataByTypeAndMonth = (data) => {
 const aggregateDataByCampaignAndMonth = (data) => {
   const summaryByCampaign = {};
 
-  const currentDate = new Date();
-  const currentMonth = currentDate.getMonth() + 1; // 월은 0부터 시작하므로 +1
+  // 데이터 내의 모든 날짜 추출
+  const dates = data.flatMap((entry) => [
+    new Date(entry.startDate),
+    new Date(entry.endDate),
+  ]);
+  const latestDate = new Date(Math.max.apply(null, dates));
+  const currentMonth = latestDate.getMonth() + 1; // 월은 0부터 시작하므로 +1
   const previousMonth = currentMonth === 1 ? 12 : currentMonth - 1;
+  const nextMonth = currentMonth === 12 ? 1 : currentMonth + 1;
 
   const relevantMonthly = [`${previousMonth}월`, `${currentMonth}월`];
 
@@ -577,7 +588,6 @@ const aggregateDataByCampaignAndMonth = (data) => {
     const campaignData = summaryByCampaign[campaign];
     const monthlyArray = [];
 
-    // 기본 월 목록을 순회하며 누락된 월은 0으로 초기화
     relevantMonthly.forEach((relevantMonth) => {
       if (campaignData.monthly[relevantMonth]) {
         const summary = campaignData.monthly[relevantMonth];
@@ -613,7 +623,7 @@ const aggregateDataByCampaignAndMonth = (data) => {
       }
     });
 
-    // 월별 데이터 정렬 (예: 이전 월, 현재 월 순)
+    // 월별 데이터 정렬 (이전 월, 현재 월 순)
     monthlyArray.sort((a, b) => {
       const monthOrder = {
         [`${previousMonth}월`]: 1,
