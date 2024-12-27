@@ -11,4 +11,5 @@ contextBridge.exposeInMainWorld("electronAPI", {
       type,
     }),
   uploadFile: () => ipcRenderer.invoke("upload-file"),
+  error: (message) => ipcRenderer.invoke("error", message),
 });

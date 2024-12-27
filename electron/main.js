@@ -108,3 +108,9 @@ ipcMain.handle(
     }
   }
 );
+
+ipcMain.handle("error", (event, message) => {
+  console.log(message);
+
+  dialog.showErrorBox("에러", `${message}`);
+});

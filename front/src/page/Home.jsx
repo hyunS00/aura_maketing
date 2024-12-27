@@ -30,32 +30,31 @@ const Home = () => {
   };
   const handleClick = async () => {
     if (!code) {
-      console.log("code 누락");
+      window.electronAPI.error("광고 코드 누락");
       return;
     }
     if (!name) {
-      console.log("name 누락");
+      window.electronAPI.error("광고주 누락");
       return;
     }
     if (!platform) {
-      console.log("platform 누락");
+      window.electronAPI.error("플랫폼 누락");
       return;
     }
     if (!type) {
-      console.log("type 누락");
+      window.electronAPI.error("보고서 타입 누락");
       return;
     }
 
     if (!filePaths.current) {
-      console.log("current 누락");
+      window.electronAPI.error("최근 파일 누락");
       return;
     }
     if (type === "monthly" && !filePaths.prev) {
-      console.log("prev 누락");
+      window.electronAPI.error("이전 파일 누락");
       return;
     }
 
-    console.log(code, name, platform, type, filePaths);
     setIsProcessing(true);
     try {
       const reportBuffer = await window.electronAPI.generateReport({
@@ -65,6 +64,8 @@ const Home = () => {
         platform,
         type,
       });
+    } catch (error) {
+      window.electronAPI.error(error);
     } finally {
       setIsProcessing(false);
     }
