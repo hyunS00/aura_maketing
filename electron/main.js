@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog, shell } = require("electron");
 const path = require("node:path");
 const Generator = require("./generator/generator.js");
-const { platform } = require("node:os");
+const progress = require("./progress.js");
 
 function createWindow() {
   console.log("path: ", path.resolve(__dirname, "preload.js"));
@@ -71,11 +71,20 @@ const config = {
     monthly: "월간",
   },
 };
+
+const onProgress = (data) => {
+  mainWindow.webContents.send("report-progress", data);
+};
+const onError = (data) => {
+  mainWindow.webContents.send("report-progress", data);
+};
+progress.on("progress", onProgress);
+progress.on("error", onError);
+
 ipcMain.handle(
   "generate-report",
   async (event, { filePaths, code, name, platform, type }) => {
     try {
-      code, name, platform, type;
       const generator = new Generator();
       const workbook = await generator.generateReport(
         filePaths,
