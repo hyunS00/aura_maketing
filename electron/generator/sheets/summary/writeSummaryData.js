@@ -36,21 +36,27 @@ const writeSummaryData = (worksheet, data, type, platform, reportType) => {
     } = reportConfig;
 
     const weekly = [
-      { index: currentWeekRowIndex[type], data: data[1] }, // 현재 주
-      { index: previousWeekRowIndex[type], data: data[0] }, // 전주
+      { index: currentWeekRowIndex[type], data: data?.[1] }, // 현재 주
+      { index: previousWeekRowIndex[type], data: data?.[0] }, // 전주
     ];
 
     weekly.forEach(({ index, data: weekData }) => {
-      summaryDataColumns.forEach((column, colIndex) => {
-        const key = summaryDataKeys[colIndex];
-        const value = weekData[key] !== undefined ? weekData[key] : 0;
-        writeCell(worksheet, column, index, value);
-      });
+      if (weekData) {
+        summaryDataColumns.forEach((column, colIndex) => {
+          const key = summaryDataKeys[colIndex];
+          const value = weekData[key] !== undefined ? weekData[key] : 0;
+          writeCell(worksheet, column, index, value);
+        });
+      }
     });
     weekly.forEach(({ index, data: weekData }) => {
-      worksheet
-        .cell(`B${index}`)
-        .value(`${weekData.startDate}-${weekData.endDate} ${type}캠페인 합계`);
+      if (weekData) {
+        worksheet
+          .cell(`B${index}`)
+          .value(
+            `${weekData.startDate}-${weekData.endDate} ${type}캠페인 합계`
+          );
+      }
     });
   } catch (error) {
     console.error("요약 데이터 작성 중 오류 발생:", error);

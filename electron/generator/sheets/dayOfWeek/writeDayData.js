@@ -3,6 +3,7 @@ const reportConfig = require("../../config/reportConfig.js");
 const writeDayData = (worksheet, data, offset, platform, reportType) => {
   const columns =
     reportConfig[platform][reportType].mappings.daySheet.dayDataColumns;
+  console.log(data);
 
   for (let i = 0; i < 7; i++) {
     worksheet.cell(`${columns[0]}${offset + i}`).value(data[i]?.impressions);

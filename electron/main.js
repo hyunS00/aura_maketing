@@ -1,7 +1,7 @@
 const { app, BrowserWindow, ipcMain, dialog, shell } = require("electron");
 const path = require("node:path");
 const Generator = require("./generator/generator.js");
-const progress = require("./progress.js");
+// const progress = require("./progress.js");
 
 function createWindow() {
   console.log("path: ", path.resolve(__dirname, "preload.js"));
@@ -72,14 +72,14 @@ const config = {
   },
 };
 
-const onProgress = (data) => {
-  mainWindow.webContents.send("report-progress", data);
-};
-const onError = (data) => {
-  mainWindow.webContents.send("report-progress", data);
-};
-progress.on("progress", onProgress);
-progress.on("error", onError);
+// const onProgress = (data) => {
+//   mainWindow.webContents.send("report-progress", data);
+// };
+// const onError = (data) => {
+//   mainWindow.webContents.send("report-progress", data);
+// };
+// progress.on("progress", onProgress);
+// progress.on("error", onError);
 
 ipcMain.handle(
   "generate-report",

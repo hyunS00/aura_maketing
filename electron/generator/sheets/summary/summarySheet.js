@@ -27,9 +27,11 @@ const writeSummarySheet = (
   worksheet.cell("C9").value(`${startDate} - ${endDate}`);
 
   type.forEach((typeValue) => {
+    console.log(typeValue);
+
     writeSummaryData(
       worksheet,
-      data[typeValue][0][reportType],
+      data[typeValue]?.[0]?.[reportType],
       typeValue,
       platform,
       reportType

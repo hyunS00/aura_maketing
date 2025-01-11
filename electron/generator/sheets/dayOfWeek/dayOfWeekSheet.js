@@ -22,13 +22,15 @@ const writeDayOfWeekSheet = (worksheet, data, platform, reportType) => {
     },
   } = reportConfig;
   type.forEach((typeValue) => {
-    writeWeekData(
-      worksheet,
-      typeData[typeValue],
-      typeRowIndex[typeValue],
-      platform,
-      reportType
-    );
+    if (typeData[typeValue]) {
+      writeWeekData(
+        worksheet,
+        typeData[typeValue],
+        typeRowIndex[typeValue],
+        platform,
+        reportType
+      );
+    }
   });
   autoFitColumns(worksheet, "B:Z");
 };
